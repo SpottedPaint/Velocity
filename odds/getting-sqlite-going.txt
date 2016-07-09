@@ -1,0 +1,11 @@
+sudo npm i electron-rebuild --save-dev
+
+
+
+A simpler solution:
+
+    Install electron-rebuild npm i electron-rebuild --save-dev
+    Launch electron-rebuild ./node_modules/.bin/electron-rebuild (or .\node_modules\.bin\electron-rebuild.cmd on windows)
+    Go to "node_modules/sqlite3/lib/binding/" and rename the folder "electron-v0.36-darwin-x64" to "node-v47-darwin-x64"
+
+PS: v47 is my version, be careful to choose the good one (in your case v45)

@@ -1,0 +1,68 @@
+body, html{ padding:0; margin:0; font-family: arial,sans-serif;}
+.chooser{ width:30%; padding:1em; box-sizing:border-box; float:left; background-color:#003366; color:#ddd; overflow:auto;}
+.recording{ width:70%; padding:1em; box-sizing:border-box; float:left; background-color:#3399FF;}
+.panel{ width:70%; padding:1em; box-sizing:border-box; float:left;}
+.actions{ width:70%; padding:1em; box-sizing:border-box;  background-color:#3399FF; text-align:right; position:absolute; bottom:0; right:0;}
+a{ color:orange;}
+a:hover{ color:red;}
+.recording header a,.recording header h2,.recording header span { float:left; }
+.recording header a{ padding:1em; outline: 1em; background-color: #003366; border-radius:2em; margin-right:1em; }
+.recording header span{ float:right; padding:.5em; outline: 1em; border-radius:2em; font-size:1.5em; }
+.recording header h2{ margin:0; padding-top:.5em; font-size:1.5em; margin-right:3em;}
+
+.panel ul.table{ padding-left:0;}
+.panel .table li{ clear:both; list-style-type:none; border-bottom:1px solid #ddd; }
+.panel .dateTime,
+.panel .timeSpan,
+.panel input.from,
+.panel input.to,
+.panel a{
+	padding:.5em;
+	float:left;
+}
+.panel input{
+	padding:.25em;
+}
+.panel .dateTime{ min-width:150px; /*width:25%;*/}
+.panel .timeSpan{ min-width:40px; /*width:20%;*/}
+.panel .action{ min-width:30px; /*width:10%;*/}
+.panel .total{ border-top:1px solid #ccc;}
+
+.filter{
+	padding:0em 0 .5em 0;
+	clear:both;
+	height:auto;
+}
+.filter:after{
+	display:table;
+	clear:both;
+	content:"";
+}
+.filter input{ font-size:inherit; width:6em; border: 1px solid #ccc; }
+#from{ float:left; width:8em; }
+#to{ float:right;  width:8em;}
+.ranges li { float:left;}
+.ranges li:nth-child(3){ position:absolute; right:0; top:0;}
+.ranges li:nth-child(1){ position:absolute; left:0; top:0;}
+.ranges li:nth-child(2){ position:absolute; left:40%; top:0;}
+.ranges{ position:relative; margin:auto; padding:0; width:40%;  list-style-type:none;}
+
+
+.chooser h2{ font-size:1.5em; padding-top:.5em; margin-top:0; font-weight:normal;}
+.chooser ul{ list-style-type:none; padding-left:0;}
+.chooser ul ul{ padding:0 0 0em .75em;}
+.chooser ul li { padding:.25em 0 .25em .5em;}
+.chooser li.add{ font-size:.75em;}
+.chooser li.add:hover{ color:orange;}
+.chooser li span.current{ color:#fff;}
+.chooser li span:hover{ color:#fff; }
+.chooser li input { padding:.25em; display:inline; }
+.actions a{ padding:.5em;}
+
+table tr#total td{ border-top:1px solid #ccc; font-weight:bolder;}
+table td.total{ border-left:1px solid #ccc; font-weight:bolder;}
+table td.grandTotal{ border:1px solid #ccc; font-weight:bolder;}
+table th, table td{ white-space:pre; padding:.5em;}
+
+.message{ display:block; clear:both; width:70%; margin:auto;}
+a.csv{ display:block; clear:both; padding:.5em; border: 4px dashed #3399FF; background-color:#eeeeee; margin-top:1em; }

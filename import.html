@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Import</title>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<link rel="stylesheet" type="text/css" href="css/screen.css" media="all">
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.gif">
+	<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+</head>
+<body>
+
+	<h1>Import</h1>
+	<p>File to Import From = /Users/Ivor/Desktop/kcopy.db</p>
+
+	<div class="message"></div>
+	<script type="text/javascript" src="js/test.js" ></script>
+	<script type="text/javascript"> window.$ = window.jQuery = require(__dirname + '/js/jquery-2.2.4.min.js'); </script>
+	<script type="text/javascript" src="js/jquery-2.2.4.min.js"></script>
+	<script type="text/javascript" src="js/jquery-ui-1.11.4.js"></script>
+	<script type="text/javascript" src="js/moment.min.js" ></script>
+
+	<script>
+	const {ipcRenderer} = require('electron');
+
+	var fileToImportFrom = '/Users/Ivor/Desktop/kcopy.db',
+		newParentForImportId = '',
+		importTypes = {'klok':1},
+		importType = 'klok',
+		importTitle = 'Import '+moment().format('YYYY-MM-DD HH:mm:ss'),
+		d = new Date(),
+		hash = d.getTime();
+
+	console.log(fileToImportFrom, newParentForImportId,importTypes, importTitle);
+	ipcRenderer.send('updateProject', 0, hash, importTitle, 0 );
+
+	ipcRenderer.on('projectAdded', projectAdded);
+
+	function projectAdded(event, id, hash, title, parentId){
+		console.log(id, hash, title, parentId);
+		newParentForImportId = id;
+		ipcRenderer.send('importFrom', newParentForImportId, fileToImportFrom, importType );
+	}
+
+
+
+	ipcRenderer.on('importedProjects', importedProjects);
+
+	function importedProjects(event, previousHighest,id){
+		ipcRenderer.send('completeImport', previousHighest,id );
+	}
+
+	ipcRenderer.on('importComplete', importComplete);
+
+	function importComplete(event, id){
+
+		moveBackToIndexUrlFocusOnNewImport = 'index.html?projectId='+newParentForImportId+'&projectTitle='+importTitle+'';
+		$('.message').append(format('<a href="{0}">{0} back</a>', moveBackToIndexUrlFocusOnNewImport ) );
+		//window.location.href =  moveBackToIndexUrlFocusOnNewImport;
+	}
+	</script>
+
+</body>
+</html>

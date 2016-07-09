@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>index</title>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<link rel="stylesheet" type="text/css" href="css/screen.css" media="all">
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.gif">
+	<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+</head>
+<body>
+
+	<div class="chooser">
+
+			<!--
+			<ul id="A">
+
+					<li><span class="current">A</span></li>
+					<li><span >B</span></li>
+					<li><span >C</span></li>
+					<li><span >D</span></li>
+					<li><span >E</span>
+					<ul id="B">
+						<li id="F"><span>Project Title Child F</span></li>
+						<li id="G"><span>Project Title Child G</span></li>
+						<li id="H"><span>Project Title Child H</span></li>
+						<ul id="C">
+							<li><span>Project Title Grandchild A</span></li>
+							<li><span>Project Title Grandchild B</span></li>
+							<li class="add">+ Add Sub Project</li>
+						</ul>
+						<li class="add">+ Add Sub Project</li>
+					</ul>
+				</li>
+				<li class="add">+ Add Project</li>
+
+			</ul>
+			-->
+
+		<ul id="0">
+
+		</ul>
+
+	</div>
+
+	<div class="recording">
+		<header>
+			<a class="record" id="1" href="">Rec</a> <h2>Project Title</h2> <span>00:00:00</span>
+		</header>
+	</div>
+
+	<div class="panel">
+		<div class="filter">
+			<input type="text" value="" placeholder="yyyy-mm-dd" id="from" class="date">
+			<ul class="ranges">
+				<li><a class="previousPeriod" href="">&larr;</a></li>
+				<li><a class="currentPeriod" href="">Current</a></li>
+				<li><a class="nextPeriod" href="">&rarr;</a></li>
+			</ul>
+			<input type="text" value="" placeholder="yyyy-mm-dd" id="to" class="date">
+		</div>
+		<ul class="table">
+			<!--
+			<li>
+				<span class="dateTime">2016-05-02 00:05</span>
+				<span class="dateTime">2016-05-02 02:00</span>
+				<span class="timeSpan">01:55</span>
+				<a class="action" href="">edit</a>
+			</li>
+			-->
+			<li class="total">
+				<span class="dateTime"></span>
+				<span class="dateTime"></span>
+				<span class="timeSpan">00:00</span>
+				<a class="action add">Add</a>
+			</li>
+		<ul>
+
+
+
+	</div>
+	<div class="actions">
+		<a class="export" href="export.html">Export</a> | <a class="import" href="import.html">Import</a> | <a class="discard" href="">Discard</a>
+	</div>
+
+	<script type="text/javascript" src="js/test.js" ></script>
+	<script type="text/javascript">
+	window.$ = window.jQuery = require(__dirname + '/js/jquery-2.2.4.min.js');
+	</script>
+	<script type="text/javascript" src="js/jquery-2.2.4.min.js"></script>
+	<script type="text/javascript" src="js/jquery-ui-1.11.4.js"></script>
+	<script type="text/javascript" src="js/moment.min.js" ></script>
+
+	<script>
+		document.onreadystatechange = function () {
+			if (document.readyState === "interactive") { }
+		}
+
+		if((window.location.search.split('?')).length > 1){
+			getParts = window.location.search.split('?')[1].split('&');
+		}else{
+			getParts = [];
+		}
+		GET = {}
+
+		for (pair in getParts){
+			parts = getParts[pair].split('=');
+			GET[parts[0]] = parts[1];
+		}
+
+
+		if(GET['from'] && GET['to']){
+			$('#from').attr('value', moment(GET['from']).format('YYYY-MM-DD') );
+			$('#to').attr('value', moment(GET['to']).format('YYYY-MM-DD') );
+		}else{
+			$('#from').attr('value', moment().format('YYYY-MM-01') );
+			$('#to').attr('value', moment().add(1, 'months').subtract(moment().format('D'), 'days').format('YYYY-MM-DD') );
+		}
+
+		$('.currentPeriod').on('click', function(e){
+			e.preventDefault();
+			var newFrom = moment().format('YYYY-MM-01'),
+				newTo = moment().add(1, 'months').subtract(moment().format('D'), 'days').format('YYYY-MM-DD');
+			$('#from').attr('value', newFrom );
+			$('#to').attr('value', newTo );
+
+			updateExportFromAndTo(newFrom,newTo);
+			addAllTimeSheetRowsToTable($('.record').attr('id') );
+		});
+
+		$('.nextPeriod').on('click', function(e){
+			e.preventDefault();
+			var newFrom = moment($('#from').val()).add(1, 'months').format('YYYY-MM-DD'),
+				newTo = moment($('#to').val()).add(1, 'months').format('YYYY-MM-DD');
+			$('#to').attr('value', newTo );
+			$('#from').attr('value', newFrom);
+
+			updateExportFromAndTo(newFrom,newTo);
+			addAllTimeSheetRowsToTable($('.record').attr('id') );
+		});
+
+		$('.previousPeriod').on('click', function(e){
+			e.preventDefault();
+			var newFrom = moment($('#from').val()).subtract(1, 'months').format('YYYY-MM-DD'),
+				newTo = $('#from').val();
+			$('#to').attr('value', newTo );
+			$('#from').attr('value', newFrom );
+
+			updateExportFromAndTo(newFrom,newTo);
+			addAllTimeSheetRowsToTable($('.record').attr('id') );
+
+		});
+
+		function updateExportFromAndTo(from,to){
+			var newExportHref = $('.export').attr('href');
+			$('.export').attr('href', newExportHref.replace(/from=[0-9-]+/,'from='+from).replace(/to=[0-9-]+/,'to='+to) );
+		}
+
+		const {ipcRenderer} = require('electron');
+
+		function targetHeight(selector, elementsToSubtract){
+			height = $(window).height()-$(selector).css('padding-bottom').replace('px','')-$(selector).css('padding-top').replace('px','');
+			for(i = 0; i < elementsToSubtract.length; i++){
+				height = height-$(elementsToSubtract[i]).innerHeight();
+			}
+			return height;
+		}
+
+		$('.chooser').height(targetHeight('.chooser',[]));
+		$('.panel').height(targetHeight('.panel',['.recording','.actions']));
+
+		$(window).on('resize',function(){
+			$('.chooser').height(targetHeight('.chooser',[]));
+		});
+
+		function addNewProjectLinkEvents(){
+			$('.chooser li .add').one('click', function(){ });
+		}
+
+		function addNewProjectLinkEvent(element){
+			$(element).off('click');
+			$(element).on('click', function(){
+				addProject('New Project',$(element).parent().attr('id').replace('child',''),'<li><span>New Project</span>', $(element));
+			});
+		}
+
+		addNewProjectLinkEvents();
+		addChooserSpanEvents();
+		function addProject(title,parentId,element,preceding){
+			var d = new Date(),
+				hash = d.getTime();
+			$('<li id="'+hash+'"><span>New Project</span></li>').insertBefore(preceding);
+			ipcRenderer.send('updateProject', 0, hash, title, parentId );
+		}
+
+		function addChooserSpanEvents(){
+			$('.chooser li span').one('click', function(){
+				addChooserSpanEvent(this);
+			});
+		}
+
+		function addChooserSpanEvent(element){
+			$(element).off('click');
+
+			$(element).on('click', function(){
+
+				switchCurrentRecorderProject($(this).parent().attr('id'),$(this).html());
+				//if(italreadyHasChildren){
+					// remove them
+					//if($(this).parent().children('li').length > 1){
+					if( $(this).parent().children('ul').length > 0){
+						$(this).parent().children('ul').remove();
+					}else{
+						ipcRenderer.send('getProjects', $(this).parent().attr('id'));
+					}
+
+
+			});
+
+			$(element).on('dblclick', function(){
+				text = $(element).html();
+				width = $(element).width();
+				nnew = $(element).replaceWith($('<input value="'+text+'" style="width:'+( ( width > text.length*12) ? width : text.length*12 )+'px" />'));
+				newSelector = $(element).selector.replace('span','input');
+				$(newSelector).on('blur', function(){
+					newNewSelector = $(element).selector;
+					nnnew = $(this).replaceWith( $('<span>'+$(this).val()+'</span>'));
+					ipcRenderer.send('updateProject', $(newNewSelector).parent().attr('id'), parseInt(moment().format('x')), $(this).val(), $(newNewSelector).parent().parent().attr('id').replace('child',''));
+					addChooserSpanEvent($(newNewSelector));
+				});
+			});
+		}
+
+		function switchCurrentRecorderProject(id, title){
+			if(typeof window.timer !== 'undefined'){
+				onRecordEnd(window.timer.id);
+			}
+			$('.record').attr('id',id);
+			$('.recording h2').text(title);
+			from = $('#from').val();
+			to = $('#to').val();
+			$('.export').attr('href',"export.html?projectId="+id+"&projectTitle="+title+"&from="+from+"&to="+to);
+			$('.discard').attr('href',"#");
+			$('.discard').attr('discard',id);
+			addAllTimeSheetRowsToTable(id);
+		}
+
+		if(GET['projectId'] && GET['projectTitle']){
+			switchCurrentRecorderProject(GET['projectId'],  decodeURIComponent(GET['projectTitle']));
+		}else{
+			switchCurrentRecorderProject(0, 'Default');
+		}
+		function updateTimerClock(){
+
+			var endDate = moment().format('YYYY-MM-DD HH:mm:ss');
+			var secondsDiff = moment(endDate).diff(window.timer.startDateTime, 'seconds');
+
+			hours =  Math.floor(secondsDiff/3600);
+			minutes = Math.floor((secondsDiff%3600)/60);
+			seconds = ((secondsDiff%3600)%60);
+			hours = (hours > 9) ? hours : '0'+hours;
+			minutes = (minutes > 9) ? minutes : '0'+minutes;
+			seconds = (seconds > 9) ? seconds : '0'+seconds;
+
+			$('.recording span').text(format('{0}:{1}:{2}',hours, minutes, seconds));
+		}
+
+		function onRecordStart(id){
+			window.timer = {};
+			window.timer.id = id;
+			window.timer.hash = moment().format('x');
+			window.timer.startDateTime = moment().format('YYYY-MM-DD HH:mm:ss');
+			window.timer.running = setInterval(updateTimerClock, 1000);
+			$(".record").css({'background-color':'red', 'color':'#fff'});
+		}
+
+		function onRecordEnd(id){
+			window.timer.endDateTime = moment().format('YYYY-MM-DD HH:mm:ss');
+			clearInterval(window.timer.running);
+			$('.recording span').text('00:00:00');
+			ipcRenderer.send('addTimesheetItem', parseInt(window.timer.hash), window.timer.startDateTime, window.timer.endDateTime,id);
+			delete window.timer;
+			$(".record").removeAttr('style');
+		}
+
+		function addNewRowToTable(id,startDateTime,endDateTime,timeSpan){
+			parts = timeSpan.split(':');
+			parts[0] = (parts[0] > 9 ) ? parts[0] : '0'+parts[0];
+			parts[1] = (parts[1] > 9 ) ? parts[1] : '0'+parts[1];
+			parts[2] = (parts[2] > 9 ) ? parts[2] : '0'+parts[2];
+			timeSpan = parts.join(':');
+			newElement = format('\
+				<li id="row{3}">\
+					<span class="dateTime">{0}</span>\
+					<span class="dateTime">{1}</span>\
+					<span class="timeSpan">{2}</span>\
+					<a class="action edit" row="{3}" href="#ER">edit</a>\
+					<a class="action delete" row="{3}" href="#ER">delete</a>\
+				</li>',
+				startDateTime.substr(0,16),
+				endDateTime.substr(0,16),
+				timeSpan,
+				id
+			);
+			$(newElement).insertBefore(".total");
+			$('li#row'+id+' a.edit' ).on('click', function(e){
+				editTimesheetItem(this);
+			})
+			$('li#row'+id+' a.delete' ).on('click', function(e){
+				deleteTimesheetItem(this);
+			})
+		}
+
+		function workOutTimeSpanbetweenTwoDateTimes(from, to){
+
+			var from = moment(from),
+			to = moment(to),
+			diff = to.diff(from, 'seconds'),
+			hours = Math.floor( (diff / (60 * 60)) ),
+			minutes = Math.floor( ( (diff % (60 * 60)) ) / 60),
+			seconds =  Math.floor( ( (diff % (60 * 60)) % (60) ) % 60 );
+			if(hours < 0){
+				return '00:00:00';
+			}
+			var hours = (hours < 10) ? '0'+hours : hours,
+				minutes = (minutes < 10) ? '0'+minutes : minutes,
+				seconds = (seconds < 10) ? '0'+seconds : seconds,
+				timeSpan = hours + ':' + minutes + ":" + seconds;
+
+
+			return timeSpan;
+		}
+
+		function deleteTimesheetItem(element){
+			var element = $(element),
+				id = element.attr('row');
+
+			ipcRenderer.send('deleteTimesheetItem',id);
+			$('li#row'+id).remove();
+		}
+		function editTimesheetItem(element){
+			var element = $(element),
+				id = element.attr('row'),
+				from = element.siblings('span.dateTime')[0],
+				fromValue = $(from).html(),
+				fromWidth = $(from).width(),
+				to = element.siblings('span.dateTime')[1],
+				toValue = $(to).html();
+			$(from).replaceWith($('<input value="'+fromValue+'" class="from" style="width:'+(fromWidth)+'px" />'));
+			$(to).replaceWith($('<input value="'+toValue+'" class="to" style="width:'+(fromWidth)+'px" />'));
+
+			newFromAndTo = element.siblings('input');
+
+			/* force redraw */
+			element.parent().hide().show();
+
+			$(newFromAndTo).on('blur', function(event){
+				if($(this).attr('class') == 'from'){
+					startDateTime = $(this).val();
+					endDateTime = $(this).siblings('input.to').val();
+				}else{
+					startDateTime = $(this).siblings('input.from').val();
+					endDateTime = $(this).val();
+				}
+				workOutTimeSpanbetweenTwoDateTimes(startDateTime, endDateTime);
+
+				if(id == 0){
+					ipcRenderer.send('addTimesheetItem', moment().format('x'), startDateTime, endDateTime, $('.record').attr('id'));
+				}else{
+					ipcRenderer.send('updateTimesheetItem', moment().format('x'), startDateTime, endDateTime, id);
+				}
+				$(this).siblings('.timeSpan').html(workOutTimeSpanbetweenTwoDateTimes(startDateTime, endDateTime));
+			});
+
+		}
+
+		ipcRenderer.on('timesheetItemUpdated', timeSheetItemUpdated);
+		function timeSheetItemUpdated(event, projectId){
+			ipcRenderer.send('getTotalForDateSpan', projectId, $('#from').val(),  $('#to').val() );
+		}
+
+		ipcRenderer.on('timesheetItemAdded', timesheetItemAdded);
+		function timesheetItemAdded(event,id,startDateTime,endDateTime,timeSpan,projectId){
+			if( projectId == $('.record').attr('id')){
+				addNewRowToTable(id,startDateTime,endDateTime,timeSpan);
+				ipcRenderer.send('getTotalForDateSpan', projectId, $('#from').val(),  $('#to').val() );
+			}
+		}
+
+		ipcRenderer.on('timesheetItemRetrieved', timesheetItemRetrieved);
+		function timesheetItemRetrieved(event,id,startDateTime,endDateTime,timeSpan,projectId){
+			if( projectId == $('.record').attr('id')){
+				addNewRowToTable(id,startDateTime,endDateTime,timeSpan);
+				ipcRenderer.send('getTotalForDateSpan', projectId, $('#from').val(),  $('#to').val() );
+			}
+		}
+
+
+		ipcRenderer.on('newTimesheetTotal', newTimesheetTotal);
+		function newTimesheetTotal(event, projectId,sum){
+			$('.total .timeSpan').html(projectId);
+			/* force redraw */
+			$('.total').hide().show(0);
+		}
+
+
+		function addAllTimeSheetRowsToTable(projectId){
+			$("ul.table li[class!=total]").remove();
+			$("ul.table li.total .timeSpan").html('00:00');
+			ipcRenderer.send('listAllTimeSheetRows', projectId, $('#from').val(),  $('#to').val() );
+		}
+
+		window.onbeforeunload = function() {
+			if(typeof window.timer !== 'undefined'){
+				onRecordEnd(window.timer.id);
+			}
+		}
+
+		$(".record").on('click',function(event){
+			event.preventDefault();
+			if(typeof window.timer !== 'undefined'){
+				onRecordEnd($(this).attr('id'));
+			}else{
+				onRecordStart($(this).attr('id'));
+			}
+		});
+
+
+
+		format = function(format) {
+			var args = Array.prototype.slice.call(arguments, 1);
+			return format.replace(/{(\d+)}/g, function(match, number) {
+				return typeof args[number] != 'undefined' ? args[number] : match;
+			});
+		};
+
+		const updateOnlineStatus = () => {
+			ipcRenderer.send('online-status-changed', navigator.onLine ? 'online' : 'offline');
+		};
+		window.addEventListener('online',  updateOnlineStatus);
+		window.addEventListener('offline',  updateOnlineStatus);
+		updateOnlineStatus();
+
+		ipcRenderer.on('timesheetChanged', timeSheetChangedListener);
+		function timeSheetChangedListener(event, arguments){
+			//console.log(event, arguments);
+		}
+		/* get the projects that are children of root */
+		ipcRenderer.send('getProjects', 0);
+		ipcRenderer.on('projectsList', renderProjects);
+		function renderProjects(event, parentId, projects){
+			projects.forEach(function(project) {
+				project['title'] = (project['title'] == null || project['title'].length == 0) ? 'Blank' : project['title'];
+
+				if($("#"+parentId).prop('nodeName') == 'UL'){
+					$("#"+parentId).append(format('<li id="{0}"><span>{1}</span></li>',project['id'],project['title']) );
+					addChooserSpanEvent( $('li#'+project['id']+' span') );
+				}else{
+					if($("#"+parentId+"child").length){
+						$("#"+parentId+"child").append(format('<li id="{0}"><span>{1}</span></li>',project['id'],project['title']) );
+						addChooserSpanEvent( $('li#'+project['id']+' span') );
+					}else{
+						$("#"+parentId).append(format('<ul id="{0}child"><li id="{1}"><span>{2}</span></li></ul>',project['parentId'], project['id'],project['title']));
+						addChooserSpanEvent( $('li#'+project['id']+' span') );
+					}
+
+				}
+				if(parentId <= 300){
+					//ipcRenderer.send('getProjects', project['id']);
+				}
+			});
+
+			/* now add new project to bottom of each ul */
+			$('.chooser #'+parentId+' ul').append('<li class="add">+ Add Sub Project</li>');
+			$('.chooser ul#'+parentId+'').append('<li class="add">+ Add Sub Project</li>');
+
+			$('.chooser .add').each(function(){
+				addNewProjectLinkEvent($(this));
+			});
+
+
+			$(".chooser ul").sortable();
+			$(".chooser ul").sortable({
+				tolerance: "pointer",
+				cursor: "move",
+				opacity: 0.7,
+				revert: 300,
+				delay: 150,
+				connectWith: '.chooser ul',
+				update: function(event, ui) {
+
+					if(ui.item.context.previousElementSibling == undefined){
+						var parentElementId = ui.item.context.parentNode.id;
+						var parentElement = $('#'+parentElementId+' > li span');
+					}else{
+						var parentElementId = ui.item.context.previousElementSibling.id;
+						var parentElement = $('#'+parentElementId+' span');
+					}
+
+					var	parentLeft = parentElement.position().left,
+						parentWidth = parentElement.width(),
+						childLeft = ui.position.left,
+						childId = ui.item.context.id,
+						newParentProjectId = ui.item.context.parentNode.id;
+
+					if(parentLeft+parentWidth < childLeft){
+
+						ipcRenderer.send('updateProject', childId.replace('child',''), parseInt(moment().format('x')), $('#'+childId+' span ').html(), parentElementId.replace('child','') );
+						$('#'+childId+' ').remove();
+						ipcRenderer.send('getProjects', parentElementId.replace('child','') );
+
+					} else if(parentLeft+parentWidth > childLeft ){
+
+						ipcRenderer.send('updateProject', childId.replace('child',''), parseInt(moment().format('x')), $('#'+childId+' span ').html(), newParentProjectId.replace('child','') );
+
+					}
+
+				}
+			}).disableSelection();
+		}
+
+		ipcRenderer.on('projectAdded', addedProject);
+		function addedProject(event, id, hash, title, parentId){
+			$('li#'+hash).attr('id',id );
+			addChooserSpanEvent( $('li#'+id+' span') );
+		}
+
+
+		$('.discard').on('click', function(event){
+			event.preventDefault();
+			projectToDeleteId = $(this).attr('discard');
+			ipcRenderer.send('discardProject', projectToDeleteId );
+
+			/* whe we delete it which project should we move focus to ? */
+			previousProjectId = $('.chooser li#'+$(this).attr('discard')+' ').prev().attr('id');
+			previousProjectTitle = $('.chooser li#'+previousProjectId+' ').children('span').html();
+			if(previousProjectId == undefined){
+				previousProjectId = $('.chooser li#'+$(this).attr('discard')+' ').parent().attr('id').replace('child','');
+				previousProjectTitle = $('.chooser li#'+previousProjectId+'child').children('span').html();
+			}
+
+			/* remove the deleted project */
+			$('.chooser li#'+projectToDeleteId).remove();
+
+			/* switch focus o previuos project */
+			switchCurrentRecorderProject(previousProjectId, previousProjectTitle);
+		});
+
+
+		$('.add').on('click', function(){
+
+			var myself = $(this),
+				projectId = $('.record').attr('id');
+				startDateTime = moment().format('YYYY-MM-DD HH:mm:ss'),
+				endDateTime = moment().add(5, 'minutes').format('YYYY-MM-DD HH:mm:ss'),
+				timeSpan = '0:5:0';
+			addNewRowToTable(0,startDateTime,endDateTime,timeSpan)
+			$('li#row0 a.edit').trigger('click');
+			$('li#row0 input.from').trigger('blur');
+			$('li#row0').remove();
+		});
+
+	</script>
+</body>
+</html>

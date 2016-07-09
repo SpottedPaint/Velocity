@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>index</title>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<link rel="stylesheet" type="text/css" href="css/screen.css" media="all">
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.gif">
+	<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+</head>
+<body>
+
+
+		<table class="data"></table>
+
+		<div class="actions">
+			<a class="close" href="index.html">Close</a>
+		</div>
+
+		<script type="text/javascript" src="js/test.js" ></script>
+		<script type="text/javascript">
+		window.$ = window.jQuery = require(__dirname + '/js/jquery-2.2.4.min.js');
+		</script>
+		<script type="text/javascript" src="js/jquery-2.2.4.min.js"></script>
+		<script type="text/javascript" src="js/moment.min.js" ></script>
+		<script>
+		const {ipcRenderer} = require('electron');
+
+
+		/* get days within range from -to */
+
+		/* create cell for each day */
+
+
+		getParts = window.location.search.split('?')[1].split('&');
+		GET = {}
+		for (pair in getParts){
+			parts = getParts[pair].split('=');
+			GET[parts[0]] = parts[1];
+		}
+
+
+		var from  = moment(GET['from']);
+		var originalFrom = moment(GET['from']).format('YYYY-MM-DD');
+		var to = moment(GET['to']);
+		var diff = to.diff(from, 'days');
+		console.log(originalFrom);
+		parentProject = GET['projectTitle'];
+		parentProjectId = GET['projectId'];
+
+		$('.close').attr('href','index.html?projectId='+GET['projectId']+'&projectTitle='+GET['projectTitle']+'&from='+GET['from']+'&to='+GET['to']+'');
+
+		ipcRenderer.on('childProjectsList', goChildProjects);
+
+		function goChildProjects(event, parentId, projects){
+			childProjects = [];
+			childProjectTitles = [];
+			projects.forEach(function(project) {
+				//console.log(parentId, project);
+				childProjectTitles.push(project.title);
+				childProjects.push(project.id);
+			});
+
+			/* create row for each child project */
+			childProjects.forEach(addProjectsAndDays);
+
+			/* add totals */
+			addProjectsAndDaysTotals(parentProjectId);
+
+			/* check values have been retrieved then create csv */
+			checkEachDayHasAValue();
+		}
+
+		ipcRenderer.send('getChildProjects', parentProjectId);
+
+
+
+
+		/* add headers row */
+		$('.data').append('<tr class="header"></tr>');
+		$('.data tr.header').append('<th>Project</th>');
+		span = 0;
+		var day = moment(originalFrom);
+		while(span <= diff){
+			thisDay = day.format('YYYY-MM-DD');
+			$('.data tr.header').append('<th>'+thisDay+'</th>');
+			span++;
+			day.add(1, 'days');
+		}
+
+		$('.data tr.header').append('<th>Total</th>');
+
+		function addProjectsAndDays(projectId, index, array) {
+
+			//console.log('a[' + index + '] = ' + projectId);
+			$('.data').append('<tr id="'+index+'"></tr>');
+			$('.data tr#'+index+' ').append('<td>'+childProjectTitles[index]+'</td>');
+			span = 0;
+			var day = moment(originalFrom);
+			while(span <= diff){
+				thisDay = day.format('YYYY-MM-DD');
+				id = index+thisDay;
+
+				$('.data tr#'+index+' ').append('<td id="'+id+'"></td>');
+
+				/* now call for contents of cell */
+				ipcRenderer.send('getTimeOnProjectBetween',id, projectId, thisDay+' 00:00:00', thisDay+' 23:59:59' );
+				span++;
+				day.add(1, 'days');
+			}
+
+			id = index+originalFrom+to.format('YYYY-MM-DD');
+
+			$('.data tr#'+index+' ').append('<td class="total" id="'+id+'"></td>');
+
+			ipcRenderer.send('getTimeOnProjectBetween',id, projectId, originalFrom+' 00:00:00', to.format('YYYY-MM-DD 23:59:59'));
+		}
+
+
+		function addProjectsAndDaysTotals(projectId) {
+			$('.data').append('<tr id="total"></tr>');
+			$('.data tr#total').append('<td>T</td>');
+			span = 0;
+			var day = moment(originalFrom);
+			while(span <= diff){
+				thisDay = day.format('YYYY-MM-DD');
+				id = 'total'+thisDay;
+				$('.data tr#total').append('<td id="'+id+'"></td>');
+
+				/* now call for contents of cell */
+				ipcRenderer.send('getTotalTimeOnProjectBetween',id, parentProjectId, thisDay+' 00:00:00', thisDay+' 23:59:59' );
+				span++;
+				day.add(1, 'days');
+			}
+
+
+			id = 'total'+originalFrom+to.format('YYYY-MM-DD');
+			$('.data tr#total').append('<td class="grandTotal" id="'+id+'"></td>');
+
+			ipcRenderer.send('getTotalTimeOnProjectBetween',id, parentProjectId, originalFrom+' 00:00:00', to.format('YYYY-MM-DD 23:59:59'));
+		}
+
+		ipcRenderer.on('projectTimeBetween', addProjectTime);
+
+		function addProjectTime(event, id, time){
+			$('#'+id+'').html(time);
+		}
+
+		function getRandomInt() {
+			min = 1;
+			max = 100;
+			return Math.floor(Math.random() * (max - min)) + min;
+		}
+
+
+
+		function getFileName(projectTitle,from,to){
+			return projectTitle+'-'+from.format('YYYY-MM-DD')+'-'+to.format('YYYY-MM-DD')+".csv";
+		}
+
+		function timeSpentOnProjectOnThisDay(id,time){
+			$('#'+id+'').html(time);
+		}
+
+		function checkEachCellHasAValue(){
+			table = {}
+			$(".data tr").each(
+				function (row) {
+					table[row] = [];
+					$(this).children().each(
+						result = function (cell) {
+							table[row][cell] = $(this).html();
+						}
+					);
+				}
+
+			);
+
+			for(row in table){
+				for(value in table[row]){
+					if(table[row][value] == ''){
+						return false;
+					}
+				}
+			}
+		}
+
+		function checkEachDayHasAValue(){
+			/* and if it doesn't try and get it again ? */
+			console.log('checking for empty values');
+			if(checkEachCellHasAValue() == false){
+
+				window.setTimeout(function(){
+					checkEachDayHasAValue();
+				}, 300);
+			}else{
+				/* all the data is there we can make the csv */
+				data = prepareForCsv();
+				fileName = getFileName(parentProject,from,to);
+				writeCsvToFile(fileName, data);
+			}
+		}
+
+		function prepareForCsv(){
+			table = {}
+			$(".data tr").each(
+				function (row) {
+					table[row] = [];
+					$(this).children().each(
+						function (cell) {
+							table[row][cell] = $(this).html();
+						}
+					);
+				}
+			);
+			return table;
+		}
+
+
+
+		function writeCsvToFile(filename, data){
+			//console.log(filename, data);
+			ipcRenderer.send('writeCSVFile', filename, data);
+		}
+		ipcRenderer.on('csvFileWritten', csvFileWasWritten);
+		function csvFileWasWritten(event, fileName){
+			$('.data').after('<div class="message"><a class="csv" href="'+fileName+'">Your file is ready you can click this or drag it to your desktop</a></div>');
+		}
+		</script>
+</body>
+</html>
