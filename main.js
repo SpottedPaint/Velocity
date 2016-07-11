@@ -161,34 +161,70 @@ ipcMain.on('listAllTimeSheetRows', function(event, projectId, from, to ){
 	) \
 \
 	GROUP BY id",[projectId], function(err, row){
-		event.sender.send('timesheetItemRetrieved', row.id, row.startDateTime, row.endDateTime, row.timeSpan, projectId);
+		if(err) {
+			console.log((new Error()).stack.split("\n")[1].split(':')[1], "listAllTimeSheetRows",  err, "{", row.id, ",", row.startDateTime, ",", row.endDateTime, ",", row.timeSpan, ",", projectId, "}" );
+		}else{
+			event.sender.send('timesheetItemRetrieved', row.id, row.startDateTime, row.endDateTime, row.timeSpan, projectId);
+		}
 	});
 
 });
 
 ipcMain.on('deleteTimesheetItem', function(event,id){
 
-	db.run("UPDATE timesheet SET deleted = 1 WHERE id = ?", [id]);
-	db.each("SELECT projectId FROM timesheet WHERE id = ?", [id],function(err, row) {
-		event.sender.send('timesheetItemUpdated', row.projectId);
+	db.run("UPDATE timesheet SET deleted = 1 WHERE id = ?", [id],
+		function(err){
+			console.log((new Error()).stack.split("\n")[1].split(':')[1], "deleteTimesheetItem",  err, "{", id, "}" );
+		}
+	);
+	db.each("SELECT projectId FROM timesheet WHERE id = ?", [id],
+	function(err, row) {
+		if(err) {
+			console.log((new Error()).stack.split("\n")[1].split(':')[1], "deleteTimesheetItem",  err, "{", id, "}" );
+		}else{
+			event.sender.send('timesheetItemUpdated', row.projectId);
+		}
 	});
 
 });
 
 ipcMain.on('updateTimesheetItem', function(event,hash,startDateTime,endDateTime,id){
+	db.run("UPDATE timesheet SET hash = ? ,startDateTime = ? ,endDateTime = ? WHERE id = ? ", [hash,startDateTime,endDateTime,id],
+		function(err){
+			if(err){
+				console.log((new Error()).stack.split("\n")[1].split(':')[1], "updateTimesheetItem",  err, "{", hash, "," , startDateTime, ",", endDateTime, ",", id, ",", "}" );
+			}
+		}
+	);
 
-	db.run("UPDATE timesheet SET hash = ? ,startDateTime = ? ,endDateTime = ? WHERE id = ?", [hash,startDateTime,endDateTime,id]);
-	db.each("SELECT projectId FROM timesheet WHERE id = ?", [id],function(err, row) {
-		event.sender.send('timesheetItemUpdated', row.projectId);
-	});
+	db.each("SELECT projectId FROM timesheet WHERE id = ?", [id],
+		function(err, row) {
+			if(err) {
+				console.log((new Error()).stack.split("\n")[1].split(':')[1], "updateTimesheetItem",  err, "{", id, "," ,row.projectId, "}" );
+			}else{
+				event.sender.send('timesheetItemUpdated', row.projectId);
+			}
+		}
+	);
 });
 
 ipcMain.on('addTimesheetItem', function(event,hash,startDateTime,endDateTime,projectId){
 
 	db.serialize(function() {
-		db.run("INSERT INTO timesheet (hash,startDateTime,endDateTime,projectId) VALUES (?,?,?,?)", [hash,startDateTime,endDateTime,projectId]);
-		db.each("SELECT rowId AS id, hash, startDateTime, endDateTime, projectId, CAST(( (strftime('%s', endDateTime) - strftime('%s', startDateTime)) / (60 * 60)) AS TEXT) || ':' || CAST((((strftime('%s', endDateTime) - strftime('%s', startDateTime)) % (60 * 60 * 24)) % (60 * 60)) / 60 AS TEXT) || ':' || CAST((((strftime('%s', endDateTime) - strftime('%s', startDateTime)) % (60 * 60 * 24)) % (60 * 60)) % (60) AS TEXT) as timeSpan FROM timesheet ORDER BY ID DESC LIMIT 1", function(err, row) {
-			event.sender.send('timesheetItemAdded', row.id, row.startDateTime, row.endDateTime, row.timeSpan, row.projectId);
+		db.run("INSERT INTO timesheet (hash,startDateTime,endDateTime,projectId) VALUES (?,?,?,?)", [hash,startDateTime,endDateTime,projectId],
+			function(err){
+					if(err){
+						console.log((new Error()).stack.split("\n")[1].split(':')[1], "addTimesheetItem",  err, "{", hash, "," , startDateTime, ",", endDateTime, ",", projectId, "}" );
+					}
+			}
+		);
+		db.each("SELECT rowId AS id, hash, startDateTime, endDateTime, projectId, CAST(( (strftime('%s', endDateTime) - strftime('%s', startDateTime)) / (60 * 60)) AS TEXT) || ':' || CAST((((strftime('%s', endDateTime) - strftime('%s', startDateTime)) % (60 * 60 * 24)) % (60 * 60)) / 60 AS TEXT) || ':' || CAST((((strftime('%s', endDateTime) - strftime('%s', startDateTime)) % (60 * 60 * 24)) % (60 * 60)) % (60) AS TEXT) as timeSpan FROM timesheet ORDER BY ID DESC LIMIT 1",
+		function(err, row) {
+			if(err) {
+				console.log((new Error()).stack.split("\n")[1].split(':')[1], "addTimesheetItem",  err, "{", hash, "," , startDateTime, ",", projectId, "}" );
+			}else{
+				event.sender.send('timesheetItemAdded', row.id, row.startDateTime, row.endDateTime, row.timeSpan, row.projectId);
+			}
 		});
 	});
 
@@ -232,8 +268,11 @@ function getTotalForDateSpan(event, projectId, from, to){
 	) \
 	GROUP BY projectId",[projectId,projectId],
 		function(err, row) {
-			console.log(row.sum, row.projectId);
-			event.sender.send('newTimesheetTotal', row.sum, row.projectId);
+			if(err) {
+				console.log((new Error()).stack.split("\n")[1].split(':')[1], "getTotalForDateSpan",  err, "{", from, ",", to, ",", row.sum, "," ,row.projectId, ",", projectId, "}" );
+			}else{
+				event.sender.send('newTimesheetTotal', row.sum, row.projectId);
+			}
 		}
 	);
 
@@ -255,8 +294,11 @@ ipcMain.on('getTimeOnProjectBetween',function(event, id, projectId, from, to){
 \
 	)",[projectId, projectId],
 		function(err, row) {
-
-			event.sender.send('projectTimeBetween', id, row.sum);
+			if(err) {
+				console.log((new Error()).stack.split("\n")[1].split(':')[1], "getTimeOnProjectBetween",  err, "{", id, ",", projectId, ",", from, ",", to , "}" );
+			}else{
+				event.sender.send('projectTimeBetween', id, row.sum);
+			}
 		}
 	);
 });
@@ -302,7 +344,11 @@ ipcMain.on('getTotalTimeOnProjectBetween',function(event, id, projectId, from, t
 	ORDER BY priority \
 	)",[projectId, projectId],
 		function(err, row) {
-			event.sender.send('projectTimeBetween', id, row.sum);
+			if(err) {
+				console.log((new Error()).stack.split("\n")[1].split(':')[1], "getTotalTimeOnProjectBetween",  err, "{", id, ",", projectId, ",", from, ",", to , "}" );
+			}else{
+				event.sender.send('projectTimeBetween', id, row.sum);
+			}
 		}
 	);
 });
@@ -347,10 +393,18 @@ ipcMain.on('updateProject', function(event, id, hash, title, parentId){
 	//console.log(id, hash, title, parentId);
 	//db.serialize(function() {
 		if(id == 0){
-			db.run("INSERT INTO project (hash,title,parentId) VALUES (?,?,?)", [hash,title,parentId]);
+			db.run("INSERT INTO project (hash,title,parentId) VALUES (?,?,?)", [hash,title,parentId], function(err){
+				if(err){
+					console.log((new Error()).stack.split("\n")[1].split(':')[1], "updateProject",  err, "{", id, ",", hash, ",", title, ",", parentId , "}" );
+				}
+			});
 			db.each("SELECT last_insert_rowid() as id", function(err, row) {
-				event.sender.send('projectAdded', row.id, hash, title, parentId);
-				//db.run("UPDATE project SET priority = ? WHERE id = ?", [ row.id, row.id]);
+				if(err) {
+					console.log((new Error()).stack.split("\n")[1].split(':')[1], "updateProject",  err, "{", id, ",", hash, ",", title, ",", parentId , "}" );
+				}else{
+					event.sender.send('projectAdded', row.id, hash, title, parentId);
+					//db.run("UPDATE project SET priority = ? WHERE id = ?", [ row.id, row.id]);
+				}
 			});
 
 			//db.each("SELECT rowId AS id, hash,title,parentId,priority,deleted FROM project ORDER BY id DESC LIMIT 1", function(err, row) {
@@ -373,7 +427,13 @@ ipcMain.on('updateProject', function(event, id, hash, title, parentId){
 			//console.log("\n", values, columns);
 			queryString = "UPDATE project SET "+columns+" WHERE id = ?";
 
-			db.run(queryString, values);
+			db.run(queryString, values,
+				function(err){
+					if(err){
+						console.log((new Error()).stack.split("\n")[1].split(':')[1], "updateProject",  err, "{", queryString , "}" );
+					}
+				}
+			);
 
 
 		}
@@ -384,15 +444,27 @@ ipcMain.on('updateProject', function(event, id, hash, title, parentId){
 
 ipcMain.on('discardProject', function(event, projectId){
 
-	db.run("UPDATE project SET deleted = 1 WHERE id = ?", [projectId]);
+	db.run("UPDATE project SET deleted = 1 WHERE id = ?", [projectId],
+		function(err){
+			if(err){
+				console.log((new Error()).stack.split("\n")[1].split(':')[1], "discardProject",  err, "{", projectId , "}" );
+			}
+		}
+	);
 
 });
 
 ipcMain.on('getProjects', function(event, parentId){
 
-	db.all("SELECT rowId AS id, hash,title,parentId FROM project WHERE parentId = ? AND deleted != 1 ORDER BY title", [parentId], function(err, row) {
-		event.sender.send('projectsList', parentId, row);
-	});
+	db.all("SELECT rowId AS id, hash,title,parentId FROM project WHERE parentId = ? AND deleted != 1 ORDER BY title", [parentId],
+		function(err, row) {
+			if(err) {
+				console.log((new Error()).stack.split("\n")[1].split(':')[1], "updateProject",  err, "{", parentId , "}" );
+			}else{
+				event.sender.send('projectsList', parentId, row);
+			}
+		}
+	);
 
 });
 
@@ -442,40 +514,71 @@ ipcMain.on('importFrom', function(event, importParentId, fileName, importType){
 		importdb.serialize(function() {
 
 			importdb.each("SELECT project_id as id FROM project ORDER BY project_id DESC LIMIT 3", function(err, row) {
+				if(err) {
+					console.log((new Error()).stack.split("\n")[1].split(':')[1], "importFrom",  err, "{", importParentId, "," ,fileName, "," ,importType , "}" );
+				}
 				highestId = row.id+importParentId+10;
 				//event.sender.send('highestIdEstablished', highestId, importParentId );
 			});
 
-			importdb.each("SELECT _lastUpdated as hash, parent_project_id as parentId, name as title, project_id as id, deleted as deleted, displayorder as priority FROM project WHERE archived = 0 ORDER BY project_id ASC, parent_project_id ASC", function(err, row) {
-	//  WHERE _deleteFlag is null AND archived = 0
-				if(err) { console.log(err); }
-				//console.log(highestId);
-				highestId = parseInt(highestId);
-				//console.log(highestId,importParentId);
-				newRowId = highestId+row.id;
-				if(row.parentId == 0 || row.parentId == ''){
-					parentId = importParentId;
-				}else{
-					parentId = parseInt(highestId)+parseInt(row.parentId);
+			importdb.each("SELECT _lastUpdated as hash, parent_project_id as parentId, name as title, project_id as id, deleted as deleted, displayorder as priority FROM project WHERE archived = 0 ORDER BY project_id ASC, parent_project_id ASC",
+				function(err, row) {
+		//  WHERE _deleteFlag is null AND archived = 0
+					if(err) {
+
+						console.log((new Error()).stack.split("\n")[1].split(':')[1], "importFrom",  err, "{", importParentId, "," ,fileName, "," ,importType , "}" );
+
+					}else{
+						//console.log(highestId);
+						highestId = parseInt(highestId);
+						//console.log(highestId,importParentId);
+						newRowId = highestId+row.id;
+						if(row.parentId == 0 || row.parentId == ''){
+							parentId = importParentId;
+						}else{
+							parentId = parseInt(highestId)+parseInt(row.parentId);
+						}
+
+						db.run("INSERT INTO project (id,hash,title,parentId,deleted) VALUES (?,?,?,?,?)", [newRowId,row.hash,row.title,parentId,row.deleted],
+							function(err){
+								if(err){
+									console.log((new Error()).stack.split("\n")[1].split(':')[1], "importFrom",  err, "{", newRowId,",",row.hash,",",row.title,",",parentId,",",row.deleted , "}" );
+								}
+							}
+						);
+
+
+					}
+
 				}
-
-				db.run("INSERT INTO project (id,hash,title,parentId,deleted) VALUES (?,?,?,?,?)", [newRowId,row.hash,row.title,parentId,row.deleted]);
-
-			});
+			);
 
 			//console.log(highestId,importParentId);
 			//db.run("UPDATE project SET id = ? WHERE id = ?", [highestId,importParentId]);
 
 
-			importdb.each("SELECT timedescriptor_id as id, _lastUpdated as hash, STARTTIMESTAMP, STOPTIMESTAMP, project_id as projectId FROM timeDescriptor WHERE _deleteFlag is null AND deleted = 0", function(err, row) {
-				var startDateTime = moment(row.STARTTIMESTAMP).format('YYYY-MM-DD HH:mm:ss'),
-					endDateTime = moment(row.STOPTIMESTAMP).format('YYYY-MM-DD HH:mm:ss'),
-					projectId = parseInt(highestId)+parseInt(row.projectId),
-					hash = row.hash;
-				//console.log(projectId, hash, endDateTime, startDateTime );
+			importdb.each("SELECT timedescriptor_id as id, _lastUpdated as hash, STARTTIMESTAMP, STOPTIMESTAMP, project_id as projectId FROM timeDescriptor WHERE _deleteFlag is null AND deleted = 0",
+				function(err, row) {
+					if(err){
+						console.log((new Error()).stack.split("\n")[1].split(':')[1], "importFrom",  err, "{", importParentId, ",",fileName, ",",importType, "}" );
 
-				db.run("INSERT INTO timesheet (hash,startDateTime,endDateTime,projectId) VALUES (?,?,?,?)", [hash,startDateTime,endDateTime,projectId]);
-			});
+					}else{
+						var startDateTime = moment(row.STARTTIMESTAMP).format('YYYY-MM-DD HH:mm:ss'),
+							endDateTime = moment(row.STOPTIMESTAMP).format('YYYY-MM-DD HH:mm:ss'),
+							projectId = parseInt(highestId)+parseInt(row.projectId),
+							hash = row.hash;
+						//console.log(projectId, hash, endDateTime, startDateTime );
+
+						db.run("INSERT INTO timesheet (hash,startDateTime,endDateTime,projectId) VALUES (?,?,?,?)", [hash,startDateTime,endDateTime,projectId],
+							function(err){
+								if(err){
+									console.log((new Error()).stack.split("\n")[1].split(':')[1], "importFrom",  err, "{", hash, ",",startDateTime, ",",endDateTime,",", projectId, "}" );
+								}
+							}
+						);
+					}
+				}
+			);
 
 
 			event.sender.send('importComplete', importParentId );
