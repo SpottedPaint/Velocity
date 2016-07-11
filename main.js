@@ -141,7 +141,7 @@ ipcMain.on('listAllTimeSheetRows', function(event, projectId, from, to ){
 	// CAST(( (strftime('%s', endDateTime) - strftime('%s', startDateTime)) % (60 * 60 * 24)) / (60 * 60) AS TEXT)
 	var from = from+' 00:00:00',
 		to = to+' 23:69:59';
-		console.log(projectId, from, to);
+	//console.log(projectId, from, to);
 	db.each("SELECT id,hash,startDateTime,endDateTime, CAST(( (strftime('%s', endDateTime) - strftime('%s', startDateTime)) / (60 * 60)) AS TEXT)|| ':' || CAST((((strftime('%s', endDateTime) - strftime('%s', startDateTime)) % (60 * 60 * 24)) % (60 * 60)) / 60 AS TEXT) || ':' || CAST((((strftime('%s', endDateTime) - strftime('%s', startDateTime)) % (60 * 60 * 24)) % (60 * 60)) % (60) AS TEXT) as timeSpan, projectId \
 	FROM timesheet \
 	WHERE id IN ( \
@@ -249,7 +249,7 @@ function getTotalForDateSpan(event, projectId, from, to){
 	var from = from+' 00:00:00',
 		to = to+' 23:59:59';
 		//
-	console.log(projectId, from, to);
+	//console.log(projectId, from, to);
 
 // ORDER BY projectId DESC \
 	//
