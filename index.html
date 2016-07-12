@@ -446,11 +446,34 @@
 		function timeSheetChangedListener(event, arguments){
 			//console.log(event, arguments);
 		}
+
+		if (GET['projectId'] && GET['projectTitle']){
+			ipcRenderer.send('getProjectsBetween', 0, GET['projectId']);
+		}
 		/* get the projects that are children of root */
+
 		ipcRenderer.send('getProjects', 0);
 		ipcRenderer.on('projectsList', renderProjects);
+
+		ipcRenderer.on('projectsListLong', renderProjectsLong);
+
+		function renderProjectsLong(event, parentId, projects){
+			projects.forEach(function(project){
+				renderProjects(null, project.parentId, [project])
+			});
+			/* get children of last project */
+			ipcRenderer.send('getProjects', projects[projects.length-1]['id']);
+
+		}
+
 		function renderProjects(event, parentId, projects){
+
+			if($("#"+parentId).length == 0){
+				return;
+			}
+
 			projects.forEach(function(project) {
+
 				project['title'] = (project['title'] == null || project['title'].length == 0) ? 'Blank' : project['title'];
 
 				if($("#"+parentId).prop('nodeName') == 'UL'){
@@ -471,7 +494,10 @@
 			});
 
 			/* now add new project to bottom of each ul */
-			$('.chooser #'+parentId+' ul').append('<li class="add">+ Add Sub Project</li>');
+
+			if($('.chooser #'+parentId+' ul > li.add').length == 0){
+				$('.chooser #'+parentId+' ul').append('<li class="add">+ Add Sub Project</li>');
+			}
 			$('.chooser ul#'+parentId+'').append('<li class="add">+ Add Sub Project</li>');
 
 			$('.chooser .add').each(function(){

@@ -468,6 +468,33 @@ ipcMain.on('getProjects', function(event, parentId){
 
 });
 
+ipcMain.on('getProjectsBetween', function(event, ancestorId, descendantId){
+
+	db.all("\
+  WITH RECURSIVE \
+    related(n) AS ( \
+      VALUES(?) \
+      UNION \
+      SELECT parentId FROM project, related \
+       WHERE project.id=related.n \
+		AND project.id != ? \
+    ) \
+SELECT related.n, project.id, project.title, project.parentId FROM related JOIN project on related.n = project.id \
+ \
+", [descendantId, ancestorId],
+		function(err, row) {
+			if(err) {
+				console.log((new Error()).stack.split("\n")[1].split(':')[1], "getProjectsBetween",  err, "{", ancestorId , ",",descendantId, "}" );
+			}else{
+				row = row.reverse();
+				event.sender.send('projectsListLong', ancestorId, row);
+			}
+		}
+	);
+
+});
+
+
 
 ipcMain.on('getChildProjects', function(event, parentId){
 
