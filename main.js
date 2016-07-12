@@ -86,7 +86,7 @@ function createWindow () {
 app.on('ready', createWindow)
 
 ipcMain.on('online-status-changed', (event, status) => {
-	console.log(status);
+	//console.log(status);
 });
 
 app.on('ready', () => {
