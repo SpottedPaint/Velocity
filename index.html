@@ -46,7 +46,7 @@
 
 	<div class="recording">
 		<header>
-			<a class="record" id="1" href="">Rec</a> <h2>Project Title</h2> <span>00:00:00</span>
+			<a class="record" projectId="1" href="">Rec</a> <h2>Project Title</h2> <span>00:00:00</span>
 		</header>
 	</div>
 
@@ -126,7 +126,7 @@
 			$('#to').attr('value', newTo );
 
 			updateExportFromAndTo(newFrom,newTo);
-			addAllTimeSheetRowsToTable($('.record').attr('id') );
+			addAllTimeSheetRowsToTable($('.record').attr('projectId') );
 		});
 
 		$('.nextPeriod').on('click', function(e){
@@ -137,7 +137,7 @@
 			$('#from').attr('value', newFrom);
 
 			updateExportFromAndTo(newFrom,newTo);
-			addAllTimeSheetRowsToTable($('.record').attr('id') );
+			addAllTimeSheetRowsToTable($('.record').attr('projectId') );
 		});
 
 		$('.previousPeriod').on('click', function(e){
@@ -148,7 +148,7 @@
 			$('#from').attr('value', newFrom );
 
 			updateExportFromAndTo(newFrom,newTo);
-			addAllTimeSheetRowsToTable($('.record').attr('id') );
+			addAllTimeSheetRowsToTable($('.record').attr('projectId') );
 
 		});
 
@@ -236,7 +236,7 @@
 			if(typeof window.timer !== 'undefined'){
 				onRecordEnd(window.timer.id);
 			}
-			$('.record').attr('id',id);
+			$('.record').attr('projectId',id);
 			$('.recording h2').text(title);
 			from = $('#from').val();
 			to = $('#to').val();
@@ -366,7 +366,7 @@
 				workOutTimeSpanbetweenTwoDateTimes(startDateTime, endDateTime);
 
 				if(id == 0){
-					ipcRenderer.send('addTimesheetItem', moment().format('x'), startDateTime, endDateTime, $('.record').attr('id'));
+					ipcRenderer.send('addTimesheetItem', moment().format('x'), startDateTime, endDateTime, $('.record').attr('projectId'));
 				}else{
 					ipcRenderer.send('updateTimesheetItem', moment().format('x'), startDateTime, endDateTime, id);
 				}
@@ -382,7 +382,7 @@
 
 		ipcRenderer.on('timesheetItemAdded', timesheetItemAdded);
 		function timesheetItemAdded(event,id,startDateTime,endDateTime,timeSpan,projectId){
-			if( projectId == $('.record').attr('id')){
+			if( projectId == $('.record').attr('projectId')){
 				addNewRowToTable(id,startDateTime,endDateTime,timeSpan);
 				ipcRenderer.send('getTotalForDateSpan', projectId, $('#from').val(),  $('#to').val() );
 			}
@@ -390,7 +390,7 @@
 
 		ipcRenderer.on('timesheetItemRetrieved', timesheetItemRetrieved);
 		function timesheetItemRetrieved(event,id,startDateTime,endDateTime,timeSpan,projectId){
-			if( projectId == $('.record').attr('id')){
+			if( projectId == $('.record').attr('projectId')){
 				addNewRowToTable(id,startDateTime,endDateTime,timeSpan);
 				ipcRenderer.send('getTotalForDateSpan', projectId, $('#from').val(),  $('#to').val() );
 			}
@@ -477,14 +477,14 @@
 				project['title'] = (project['title'] == null || project['title'].length == 0) ? 'Blank' : project['title'];
 
 				if($("#"+parentId).prop('nodeName') == 'UL'){
-					$("#"+parentId).append(format('<li id="{0}"><span>{1}</span></li>',project['id'],project['title']) );
+					$("#"+parentId).append(format('<li id="{0}"><span>{1}</span>{2}</li>',project['id'],project['title'], (project['hasChildren']) ? '+' :'' ) );
 					addChooserSpanEvent( $('li#'+project['id']+' span') );
 				}else{
 					if($("#"+parentId+"child").length){
-						$("#"+parentId+"child").append(format('<li id="{0}"><span>{1}</span></li>',project['id'],project['title']) );
+						$("#"+parentId+"child").append(format('<li id="{0}"><span>{1}</span>{2}</li>',project['id'],project['title'], (project['hasChildren']) ? '+' :'') );
 						addChooserSpanEvent( $('li#'+project['id']+' span') );
 					}else{
-						$("#"+parentId).append(format('<ul id="{0}child"><li id="{1}"><span>{2}</span></li></ul>',project['parentId'], project['id'],project['title']));
+						$("#"+parentId).append(format('<ul id="{0}child"><li id="{1}"><span>{2}</span>{3}</li></ul>',project['parentId'], project['id'],project['title'],(project['hasChildren']) ? '+' :''));
 						addChooserSpanEvent( $('li#'+project['id']+' span') );
 					}
 
@@ -516,6 +516,10 @@
 				update: function(event, ui) {
 
 					if(ui.item.context.previousElementSibling == undefined){
+
+
+
+
 						var parentElementId = ui.item.context.parentNode.id;
 						var parentElement = $('#'+parentElementId+' > li span');
 					}else{
@@ -576,7 +580,7 @@
 		$('.add').on('click', function(){
 
 			var myself = $(this),
-				projectId = $('.record').attr('id');
+				projectId = $('.record').attr('projectId');
 				startDateTime = moment().format('YYYY-MM-DD HH:mm:ss'),
 				endDateTime = moment().add(5, 'minutes').format('YYYY-MM-DD HH:mm:ss'),
 				timeSpan = '0:5:0';
