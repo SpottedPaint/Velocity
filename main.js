@@ -14,7 +14,7 @@ let mainWindow;
 let onlineStatusWindow;
 let appIcon = null;
 
-
+/* moving projects around with drag/drop */
 /* setup db if it doesn't exist */
 var db = new sqlite3.Database(__dirname + '/velocity.db');
 
@@ -133,9 +133,6 @@ app.on('activate', function () {
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
 
-
-
-
 ipcMain.on('listAllTimeSheetRows', function(event, projectId, from, to ){
 	// was for days but if over 24 hours was 00
 	// CAST(( (strftime('%s', endDateTime) - strftime('%s', startDateTime)) % (60 * 60 * 24)) / (60 * 60) AS TEXT)
@@ -239,6 +236,7 @@ function getFileName(projectId, from, to, extension){
 	return projectTitle+from+to+'.'+ext
 	*/
 }
+
 ipcMain.on('getTotalForDateSpan',function(event,projectId, from, to){
 	getTotalForDateSpan(event, projectId, from, to);
 });
@@ -455,12 +453,15 @@ ipcMain.on('discardProject', function(event, projectId){
 });
 
 ipcMain.on('getProjects', function(event, parentId){
-
-	db.all("SELECT rowId AS id, hash,title,parentId FROM project WHERE parentId = ? AND deleted != 1 ORDER BY title", [parentId],
+//-- LEFT JOIN project p on project.id = p.parentId \
+	db.all("SELECT project.id, project.hash,project.title,project.parentId, CASE COUNT(p.id) WHEN COUNT(p.id) is null THEN 0 ELSE 1 END as hasChildren FROM project \
+	LEFT JOIN project as p on project.id = p.parentId AND p.deleted != 1 \
+	WHERE project.parentId = ? AND project.deleted != 1 GROUP by project.id ORDER BY project.title", [parentId],
 		function(err, row) {
 			if(err) {
 				console.log((new Error()).stack.split("\n")[1].split(':')[1], "updateProject",  err, "{", parentId , "}" );
 			}else{
+
 				event.sender.send('projectsList', parentId, row);
 			}
 		}
@@ -479,7 +480,7 @@ ipcMain.on('getProjectsBetween', function(event, ancestorId, descendantId){
        WHERE project.id=related.n \
 		AND project.id != ? \
     ) \
-SELECT related.n, project.id, project.title, project.parentId FROM related JOIN project on related.n = project.id \
+SELECT related.n, project.id, project.title, project.parentId, 1 as hasChildren FROM related JOIN project on related.n = project.id \
  \
 ", [descendantId, ancestorId],
 		function(err, row) {
