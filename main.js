@@ -468,6 +468,47 @@ ipcMain.on('getProjects', function(event, parentId){
 	);
 
 });
+ipcMain.on('getProjectsExpanded', function (event, expanded){
+
+	/*
+	SELECT project.id, project.hash,project.title,project.parentId, CASE COUNT(p.id) WHEN COUNT(p.id) is null THEN 0 ELSE 1 END as hasChildren \
+	FROM project \
+	LEFT JOIN project as p on project.id = p.parentId AND p.deleted != 1 \
+	WHERE project.parentId IN (0,173,5514) AND project.deleted != 1 \
+	GROUP by project.id \
+	ORDER BY project.title
+	*/
+	/*
+	http://charlesleifer.com/blog/querying-tree-structures-in-sqlite-using-python-and-the-transitive-closure-extension/
+	*/
+	db.all(" \
+	WITH RECURSIVE cte_categories (id, title, parentId, depth) AS ( \
+		SELECT id, title, parentId, 1 \
+		FROM project \
+		WHERE project.parentId IN (?) \
+		AND project.deleted != 1 \
+		UNION ALL \
+		SELECT c.id, c.title, c.parentId, r.depth + 1 \
+		FROM project AS c \
+		INNER JOIN cte_categories AS r ON (c.parentId = r.id) \
+		WHERE c.deleted != 1 \
+		AND c.parentId IN (?) \
+	) \
+	SELECT id, title, depth, parentId, 1 as hasChildren \
+	FROM cte_categories ORDER BY depth, title; \
+	", [expanded.join()],
+		function(err, row) {
+			if(err) {
+				console.log((new Error()).stack.split("\n")[1].split(':')[1], "getProjectsExpanded",  err, "{", expanded , "}" );
+			}else{
+				console.log(row);
+				event.sender.send('projectsList', row.parentId, row);
+			}
+		}
+	);
+
+
+});
 
 ipcMain.on('getProjectsBetween', function(event, ancestorId, descendantId){
 
