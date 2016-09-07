@@ -539,20 +539,116 @@ SELECT related.n, project.id, project.title, project.parentId, 1 as hasChildren 
 
 
 ipcMain.on('getChildProjects', function(event, parentId){
+  	/*
+    WITH RECURSIVE related(n) AS ( \
+        VALUES(?) \
+        UNION \
+        SELECT id FROM project, related \
+        WHERE project.parentId=related.n \
+      ) \
+  	SELECT project.id, ( coalesce(pp.title,'-') || ' > ' || coalesce(p.title,'-') || ' > ' || project.title) as title, project.parentId \
+  	FROM project \
+  	LEFT JOIN project as p on p.id = project.parentId  \
+  	LEFT JOIN project as pp on pp.id = p.parentId  \
+  	WHERE project.id IN related \
+  	ORDER BY project.id DESC \ */
 
-	db.all("\
-  WITH RECURSIVE \
-    related(n) AS ( \
-      VALUES(?) \
-      UNION \
-      SELECT id FROM project, related \
-       WHERE project.parentId=related.n \
-    ) \
-  SELECT id, title FROM project \
-   WHERE project.id IN related \
-	ORDER BY id DESC ", [parentId], function(err, row) {
-		event.sender.send('childProjectsList', parentId, row);
+	db.each("\
+    WITH RECURSIVE related(n) AS ( \
+        VALUES(?) \
+        UNION \
+        SELECT id FROM project, related \
+        WHERE project.parentId=related.n \
+      ) \
+	SELECT GROUP_CONCAT(n) as familyProjectId FROM related \
+	", [parentId],
+
+	function(err, row) {
+		if(err) {
+			console.log((new Error()).stack.split("\n")[1].split(':')[1], "getChildProjects",  err, "{", parentId , "}" );
+		}else{
+			familyProjectId = row.familyProjectId.split(',').join(',');
+			//console.log(familyProjectId);
+			//console.log(parentId);
+			familyMembers = row.familyProjectId.split(',');
+			//console.log(familyMembers);
+			/* -- AND project.id != ? \ */
+			output = []
+			var itemsProcessed = 0;
+			familyMembers.forEach(function(familyMemberId){
+				db.each("\
+					WITH RECURSIVE related(n) AS ( \
+						VALUES(?) \
+						UNION \
+						SELECT parentId FROM project, related \
+						WHERE project.id=related.n \
+					) \
+					SELECT ? as id, GROUP_CONCAT(project.title,'>') as title \
+					FROM related \
+					JOIN project on related.n = project.id \
+					\
+					", [familyMemberId, familyMemberId],
+					function(err, row) {
+						if(err) {
+							console.log((new Error()).stack.split("\n")[1].split(':')[1], "getChildProjects",  err, "{", parentId , "}" );
+						}else{
+							if(row.title === null){
+
+							}else{
+								row.title = row.title.split('>').reverse().join(' > ');
+							}
+							output.push(row);
+
+							itemsProcessed++;
+							if(itemsProcessed === familyMembers.length) {
+								event.sender.send('childProjectsList', parentId, output);
+							}
+
+						}
+					}
+				);
+
+
+			});
+
+
+	//event.sender.send('childProjectsList', parentId, output);
+			//1,173,5514,178,221,5512,5518.split(',');
+
+			//event.sender.send('childProjectsList', parentId, row);
+		}
 	});
+
+/*
+	db.all("\
+	WITH RECURSIVE cte_categories (id, title, parentId, depth) AS ( \
+		SELECT id, title, parentId, 1 \
+		FROM project \
+		WHERE project.parentId IN ("+familyProjectId+") \
+		AND project.deleted != 1 \
+		UNION ALL \
+		SELECT c.id, c.title, c.parentId, r.depth + 1 \
+		FROM project AS c \
+		INNER JOIN cte_categories AS r ON (c.parentId = r.id) \
+		WHERE c.deleted != 1 \
+		AND c.parentId IN ("+familyProjectId+") \
+	) \
+	SELECT ? as e,GROUP_CONCAT(title), id, title, depth, parentId \
+	FROM cte_categories \
+	ORDER BY depth, title; \
+	", [parentId],
+		function(err, row) {
+			if(err) {
+				console.log((new Error()).stack.split("\n")[1].split(':')[1], "getChildProjects",  err, "{", parentId , "}" );
+			}else{
+				console.log(row);
+
+				event.sender.send('childProjectsList', parentId, row);
+			}
+		}
+	);
+*/
+
 
 });
 
