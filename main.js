@@ -539,27 +539,27 @@ SELECT related.n, project.id, project.title, project.parentId, 1 as hasChildren 
 
 
 ipcMain.on('getChildProjects', function(event, parentId){
-  	/*
-    WITH RECURSIVE related(n) AS ( \
-        VALUES(?) \
-        UNION \
-        SELECT id FROM project, related \
-        WHERE project.parentId=related.n \
-      ) \
-  	SELECT project.id, ( coalesce(pp.title,'-') || ' > ' || coalesce(p.title,'-') || ' > ' || project.title) as title, project.parentId \
-  	FROM project \
-  	LEFT JOIN project as p on p.id = project.parentId  \
-  	LEFT JOIN project as pp on pp.id = p.parentId  \
-  	WHERE project.id IN related \
-  	ORDER BY project.id DESC \ */
+/*
+WITH RECURSIVE related(n) AS ( \
+    VALUES(?) \
+    UNION \
+    SELECT id FROM project, related \
+    WHERE project.parentId=related.n \
+  ) \
+SELECT project.id, ( coalesce(pp.title,'-') || ' > ' || coalesce(p.title,'-') || ' > ' || project.title) as title, project.parentId \
+FROM project \
+LEFT JOIN project as p on p.id = project.parentId  \
+LEFT JOIN project as pp on pp.id = p.parentId  \
+WHERE project.id IN related \
+ORDER BY project.id DESC \ */
 
 	db.each("\
-    WITH RECURSIVE related(n) AS ( \
-        VALUES(?) \
-        UNION \
-        SELECT id FROM project, related \
-        WHERE project.parentId=related.n \
-      ) \
+	WITH RECURSIVE related(n) AS ( \
+		VALUES(?) \
+		UNION \
+		SELECT id FROM project, related \
+		WHERE project.parentId=related.n \
+	) \
 	SELECT GROUP_CONCAT(n) as familyProjectId FROM related \
 	", [parentId],
 
