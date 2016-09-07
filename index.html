@@ -420,9 +420,9 @@
 		$(".record").on('click',function(event){
 			event.preventDefault();
 			if(typeof window.timer !== 'undefined'){
-				onRecordEnd($(this).attr('id'));
+				onRecordEnd($(this).attr('projectId'));
 			}else{
-				onRecordStart($(this).attr('id'));
+				onRecordStart($(this).attr('projectId'));
 			}
 		});
 
