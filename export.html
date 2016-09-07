@@ -9,22 +9,22 @@
 	<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 </head>
-<body>
+<body id="export">
 
 
-		<table class="data"></table>
+	<table class="data"></table>
 
-		<div class="actions">
-			<a class="close" href="index.html">Close</a>
-		</div>
+	<div class="actions">
+		<a class="close" href="index.html">Close</a>
+	</div>
 
-		<script type="text/javascript" src="js/test.js" ></script>
-		<script type="text/javascript">
+	<script type="text/javascript" src="js/test.js" ></script>
+	<script type="text/javascript">
 		window.$ = window.jQuery = require(__dirname + '/js/jquery-2.2.4.min.js');
-		</script>
-		<script type="text/javascript" src="js/jquery-2.2.4.min.js"></script>
-		<script type="text/javascript" src="js/moment.min.js" ></script>
-		<script>
+	</script>
+	<script type="text/javascript" src="js/jquery-2.2.4.min.js"></script>
+	<script type="text/javascript" src="js/moment.min.js" ></script>
+	<script>
 		const {ipcRenderer} = require('electron');
 
 
@@ -114,13 +114,16 @@
 
 			$('.data tr#'+index+' ').append('<td class="total" id="'+id+'"></td>');
 
+
+			$('.actions').css({'width':$('.data').width()});
+
 			ipcRenderer.send('getTimeOnProjectBetween',id, projectId, originalFrom+' 00:00:00', to.format('YYYY-MM-DD 23:59:59'));
 		}
 
 
 		function addProjectsAndDaysTotals(projectId) {
 			$('.data').append('<tr id="total"></tr>');
-			$('.data tr#total').append('<td>T</td>');
+			$('.data tr#total').append('<td>Total</td>');
 			span = 0;
 			var day = moment(originalFrom);
 			while(span <= diff){
@@ -133,8 +136,6 @@
 				span++;
 				day.add(1, 'days');
 			}
-
-
 			id = 'total'+originalFrom+to.format('YYYY-MM-DD');
 			$('.data tr#total').append('<td class="grandTotal" id="'+id+'"></td>');
 
@@ -153,10 +154,7 @@
 			return Math.floor(Math.random() * (max - min)) + min;
 		}
 
-
-
 		function getFileName(projectTitle,from,to){
-
 			return decodeURIComponent(projectTitle).replace(/"/g,'').replace(/,/g, '')+'-'+from.format('YYYY-MM-DD')+'-'+to.format('YYYY-MM-DD')+".csv";
 		}
 
@@ -228,6 +226,6 @@
 		function csvFileWasWritten(event, fileName){
 			$('.data').after('<div class="message"><a class="csv" href="'+fileName+'">Your file is ready you can click this or drag it to your desktop</a></div>');
 		}
-		</script>
+	</script>
 </body>
 </html>
