@@ -1,3 +1,3 @@
 # electron time tracking thingy-me-bob
 
-non working prototype
+sort of working with sharp edges
