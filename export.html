@@ -208,7 +208,7 @@
 					table[row] = [];
 					$(this).children().each(
 						function (cell) {
-							table[row][cell] = $(this).html().replace(/"/g,"'").replace(/,/g,'');
+							table[row][cell] = $(this).html().replace(/"/g,"'").replace(/,/g,'').replace(/&gt;/g,'>');
 						}
 					);
 				}
