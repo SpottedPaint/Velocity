@@ -2,7 +2,13 @@ body, html{ padding:0; margin:0; font-family: arial,sans-serif;}
 .chooser{ width:30%; padding:1em; box-sizing:border-box; float:left; background-color:#003366; color:#ddd; overflow:auto;}
 .recording{ width:70%; padding:1em; box-sizing:border-box; float:left; background-color:#3399FF;}
 .panel{ width:70%; padding:1em; box-sizing:border-box; float:left;}
-.actions{ width:70%; padding:1em; box-sizing:border-box;  background-color:#3399FF; text-align:right; position:absolute; bottom:0; right:0;}
+.actions{ width:70%; padding:1em; box-sizing:border-box;  background-color:#3399FF; text-align:right; position:fixed; bottom:0; right:0;}
+
+/* page specific */
+#export .actions{ }
+#export .data{ padding:1em;}
+
+
 a{ color:orange;}
 a:hover{ color:red;}
 .recording header a,.recording header h2,.recording header span { float:left; }
@@ -59,10 +65,14 @@ a:hover{ color:red;}
 .chooser li input { padding:.25em; display:inline; }
 .actions a{ padding:.5em;}
 
-table tr#total td{ border-top:1px solid #ccc; font-weight:bolder;}
-table td.total{ border-left:1px solid #ccc; font-weight:bolder;}
-table td.grandTotal{ border:1px solid #ccc; font-weight:bolder;}
-table th, table td{ white-space:pre; padding:.5em;}
+table { border-collapse: collapse; margin:1em; }
+table tr.header{ background-color:#3399FF;}
+table tr#total td{ border-top:3px solid #99CCFF; font-weight:bolder;}
+table td.total{ font-weight:bolder;}
+table td.grandTotal{ font-weight:bolder;}
+table th, table td{ white-space:pre; padding:.25em; border:1px solid #99CCFF; }
+table th{ border:1px solid #3399FF; padding:.75em .5em .75em .5em;}
+
 
 .message{ display:block; clear:both; width:70%; margin:auto;}
 a.csv{ display:block; clear:both; padding:.5em; border: 4px dashed #3399FF; background-color:#eeeeee; margin-top:1em; }
