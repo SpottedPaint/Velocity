@@ -646,10 +646,8 @@
 		function getCurrentExpansionState(){
 			expanded = [];
 			$('.chooser ul').each( function(){
-				console.log(this.id);
 				expanded.push(this.id.replace('child',''));
 			});
-			//console.log(expanded);
 			/* $('.chooser ul#0 ul').remove(); */
 			ipcRenderer.send('getProjectsExpanded', expanded );
 
