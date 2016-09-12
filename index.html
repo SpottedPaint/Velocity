@@ -608,21 +608,25 @@
 		$('.discard').on('click', function(event){
 			event.preventDefault();
 			projectToDeleteId = $(this).attr('discard');
-			ipcRenderer.send('discardProject', projectToDeleteId );
+			/* confirm they really want to delete this */
+			var confirmed = window.confirm('Are you sure you want to discard that project, for ever permantly?');
+			if(confirmed){
+				ipcRenderer.send('discardProject', projectToDeleteId );
 
-			/* whe we delete it which project should we move focus to ? */
-			previousProjectId = $('.chooser li#'+$(this).attr('discard')+' ').prev().attr('id');
-			previousProjectTitle = $('.chooser li#'+previousProjectId+' ').children('span').html();
-			if(previousProjectId == undefined){
-				previousProjectId = $('.chooser li#'+$(this).attr('discard')+' ').parent().attr('id').replace('child','');
-				previousProjectTitle = $('.chooser li#'+previousProjectId+'child').children('span').html();
+				/* when we delete it which project should we move focus to ? */
+				previousProjectId = $('.chooser li#'+$(this).attr('discard')+' ').prev().attr('id');
+				previousProjectTitle = $('.chooser li#'+previousProjectId+' ').children('span').html();
+				if(previousProjectId == undefined){
+					previousProjectId = $('.chooser li#'+$(this).attr('discard')+' ').parent().attr('id').replace('child','');
+					previousProjectTitle = $('.chooser li#'+previousProjectId+'child').children('span').html();
+				}
+
+				/* remove the deleted project */
+				$('.chooser li#'+projectToDeleteId).remove();
+
+				/* switch focus to previous project */
+				switchCurrentRecorderProject(previousProjectId, previousProjectTitle);
 			}
-
-			/* remove the deleted project */
-			$('.chooser li#'+projectToDeleteId).remove();
-
-			/* switch focus o previuos project */
-			switchCurrentRecorderProject(previousProjectId, previousProjectTitle);
 		});
 
 
