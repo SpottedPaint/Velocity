@@ -54,10 +54,9 @@
 	ipcRenderer.on('importComplete', importComplete);
 
 	function importComplete(event, id){
-
 		moveBackToIndexUrlFocusOnNewImport = 'index.html?projectId='+newParentForImportId+'&projectTitle='+importTitle+'';
 		$('.message').append(format('<a href="{0}">{0} back</a>', moveBackToIndexUrlFocusOnNewImport ) );
-		//window.location.href =  moveBackToIndexUrlFocusOnNewImport;
+		window.location.href = moveBackToIndexUrlFocusOnNewImport;
 	}
 	</script>
 
