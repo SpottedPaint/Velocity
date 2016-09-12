@@ -720,20 +720,20 @@ ipcMain.on('importFrom', function(event, importParentId, fileName, importType){
 
 			//console.log(highestId,importParentId);
 			//db.run("UPDATE project SET id = ? WHERE id = ?", [highestId,importParentId]);
-
-
-			importdb.each("SELECT timedescriptor_id as id, _lastUpdated as hash, STARTTIMESTAMP, STOPTIMESTAMP, project_id as projectId FROM timeDescriptor WHERE _deleteFlag is null AND deleted = 0",
+			// -- WHERE _deleteFlag is null AND deleted = 0 \
+			importdb.each("SELECT timedescriptor_id as id, _lastUpdated as hash, STARTTIMESTAMP, STOPTIMESTAMP, project_id as projectId \
+			FROM timeDescriptor \
+			WHERE deleted = 0 \
+			ORDER BY project_id",
 				function(err, row) {
 					if(err){
 						console.log((new Error()).stack.split("\n")[1].split(':')[1], "importFrom",  err, "{", importParentId, ",",fileName, ",",importType, "}" );
-
 					}else{
 						var startDateTime = moment(row.STARTTIMESTAMP).format('YYYY-MM-DD HH:mm:ss'),
 							endDateTime = moment(row.STOPTIMESTAMP).format('YYYY-MM-DD HH:mm:ss'),
 							projectId = parseInt(highestId)+parseInt(row.projectId),
 							hash = row.hash;
 						//console.log(projectId, hash, endDateTime, startDateTime );
-
 						db.run("INSERT INTO timesheet (hash,startDateTime,endDateTime,projectId) VALUES (?,?,?,?)", [hash,startDateTime,endDateTime,projectId],
 							function(err){
 								if(err){
@@ -744,7 +744,6 @@ ipcMain.on('importFrom', function(event, importParentId, fileName, importType){
 					}
 				}
 			);
-
 
 			event.sender.send('importComplete', importParentId );
 		});
