@@ -655,7 +655,7 @@ ORDER BY project.id DESC \ */
 
 ipcMain.on('writeCSVFile', function(event, fileName, data){
 
-	fileDestination = "exports/"+fileName;
+	fileDestination = __dirname +"/exports/"+fileName;
 	var fs = require('fs');
 	var writeStream = fs.createWriteStream(fileDestination);
 	for(row in data){
