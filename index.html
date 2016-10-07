@@ -306,10 +306,12 @@
 			$(newElement).insertBefore(".total");
 			$('li#row'+id+' a.edit' ).on('click', function(e){
 				editTimesheetItem(this);
-			})
+			});
 			$('li#row'+id+' a.delete' ).on('click', function(e){
 				deleteTimesheetItem(this);
-			})
+			});
+			/* trigger redraw */
+			$('.table').hide().show(0);
 		}
 
 		function workOutTimeSpanbetweenTwoDateTimes(from, to){
