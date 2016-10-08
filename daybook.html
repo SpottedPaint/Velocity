@@ -183,7 +183,7 @@ assert( spanLength('06:05:05','18:05:05') == 49.99999999999999, '06:05:05 to 18:
 function addSpan(event, date, timeFrom, timeTo, title, parentProjectTitle){
 	var width = spanLength(timeFrom+':00',timeTo+':00'),
 		left = convertTimeToPercentage(timeFrom),
-		colour = colourByHashCode(title);
+		colour = colourByHashCode(parentProjectTitle);
 		$('.day').each(function(){
 			if($(this).attr('date') == date ){
 				$(this).append( '<span style="left:'+left+'%; width:'+width+'%; background-color:'+colour+'">'+title+'</span>');
