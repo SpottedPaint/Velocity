@@ -653,6 +653,25 @@ ORDER BY project.id DESC \ */
 });
 
 
+ipcMain.on('getTimesForWeek', function(event, from, to){
+
+	var from = from+' 00:00:00';
+		to = to+' 23:59:59';
+	/*  */
+	db.each("SELECT project.title, project.id, timesheet.id, timesheet.startDateTime, timesheet.endDateTime \
+	FROM timesheet \
+	JOIN project on project.id = timesheet.projectId \
+	AND strftime(startDateTime) BETWEEN strftime('"+from+"') AND strftime('"+to+"')", function(err, row){
+		if(err) {
+			console.log((new Error()).stack.split("\n")[1].split(':')[1], "getTimesForWeek",  err, "{", row.title, ",", startDateTime, ",", endDateTime, ",", projectId, "}" );
+		}else{
+			//console.log("{", row.title, ",", row.startDateTime, ",", row.endDateTime, ",", row.projectId, "}" );
+			//console.log( row.startDateTime.substr(0,10),row.startDateTime.substr(11,5),row.endDateTime.substr(11,5),row.title,'parentProjectTitle' );
+			event.sender.send('addASpan', row.startDateTime.substr(0,10), row.startDateTime.substr(11,5), row.endDateTime.substr(11,5), row.title, 'parentProjectTitle' );
+		}
+	});
+});
+
 ipcMain.on('writeCSVFile', function(event, fileName, data){
 
 	fileDestination = __dirname +"/exports/"+fileName;

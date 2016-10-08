@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>index</title>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.gif">
+	<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+	<link rel="stylesheet" type="text/css" href="css/screen.css" media="all">
+	<link rel="stylesheet" href="css/jquery-ui.css">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+	<style type="text/css">
+	body{ background-color:#eee; margin:0; padding:0; font-family:arial, sans-serif;}
+	#daybook{ display:block; width:100%; background-color:#fff; }
+	.day{ display:block; width:100%; min-height:50px; border-top:2px solid #888; overflow-x:hidden;}
+	.day span{
+		padding:.25em;
+		box-sizing:border-box;
+		background-color:#99CCFF;
+		border-radius:.25em;
+		position:absolute;
+		height:1.5em;
+		overflow: hidden;
+		text-overflow: ellipsis; opacity:.75;
+	}
+	.day h2{ position:absolute; left:10px; margin:0; padding-top:10px;color:#ccc;}
+	.scale{ width:100%; height:1.75em; clear:both; overflow:hidden;}
+	.scale span{ width:4.16666%; float:left; box-sizing:border-box; padding:.25em; border-left:1px solid #888; color:#888;}
+	.notice{ background-color:purple; color:#fff; width:50%; padding:.5em; opacity:.5; position:absolute; bottom:0; left:0; z-index:100;}
+
+	/* if screen is less than x show only every nth hour in scale */
+	@media (max-width:600px) {
+		.scale span:nth-child(2n){
+			background-color:transparent;
+			text-indent:-100px;
+			overflow:hidden;
+			border-left:none;
+		}
+
+	}
+	</style>
+</head>
+<body>
+<div id="daybook">
+	<div class="notice">
+
+	</div>
+	<div class="scale">
+		<span>0</span>
+		<span>1</span>
+		<span>2</span>
+		<span>3</span>
+		<span>4</span>
+		<span>5</span>
+		<span>6</span>
+		<span>7</span>
+		<span>8</span>
+		<span>9</span>
+		<span>10</span>
+		<span>11</span>
+		<span>12</span>
+		<span>13</span>
+		<span>14</span>
+		<span>15</span>
+		<span>16</span>
+		<span>17</span>
+		<span>18</span>
+		<span>19</span>
+		<span>20</span>
+		<span>21</span>
+		<span>22</span>
+		<span>23</span>
+	</div>
+	<div class="day" date="2016-10-03">
+		<h2>Mandag</h2>
+
+	</div>
+	<div class="day" date="2016-10-04">
+		<h2>Tirsdag</h2>
+
+	</div>
+	<div class="day" date="2016-10-05">
+		<h2>Onsdag</h2>
+
+	</div>
+	<div class="day" date="2016-10-06">
+		<h2>Torsdag</h2>
+
+	</div>
+	<div class="day" date="2016-10-07">
+		<h2>Fredag</h2>
+
+	</div>
+	<div class="day" date="2016-10-08">
+		<h2>Lørdag</h2>
+
+	</div>
+	<div class="day" date="2016-10-09">
+		<h2>Søndag</h2>
+
+	</div>
+
+</div><!-- daybook -->
+
+
+	<div class="actions">
+		<a class="export" href="index.html">Home</a>
+	</div>
+<!-- <script src="jquery-3.1.1.min.js"></script>
+<script src="jquery-ui.min.js"></script> -->
+	<script type="text/javascript">
+	window.$ = window.jQuery = require(__dirname + '/js/jquery-2.2.4.min.js');
+	</script>
+	<script type="text/javascript" src="js/jquery-2.2.4.min.js"></script>
+	<script type="text/javascript" src="js/jquery-ui-1.11.4.js"></script>
+	<script type="text/javascript" src="js/moment.min.js" ></script>
+<script>
+
+const {ipcRenderer} = require('electron');
+
+var fromDate = '2016-10-03',
+	toDate = moment('2016-10-03').add(7, 'days').format('YYYY-MM-DD');
+ipcRenderer.send('getTimesForWeek', fromDate, toDate);
+
+/* lets do assertions for testing */
+function assert(condition, message) {
+	if (!condition) {
+		message = message || "Assertion failed";
+		/*if (typeof Error !== "undefined") {
+			throw new Error(message);
+		}*/
+		throw message;
+	}
+}
+/* work out colour from title  http://stackoverflow.com/questions/3426404/create-a-hexadecimal-colour-based-on-a-string-with-javascript*/
+function colourByHashCode(value) {
+    return value.getHashCode().intToHSL();
+}
+String.prototype.getHashCode = function() {
+    var hash = 0;
+    if (this.length == 0) return hash;
+    for (var i = 0; i < this.length; i++) {
+        hash = this.charCodeAt(i) + ((hash << 5) - hash);
+        hash = hash & hash; // Convert to 32bit integer
+    }
+    return hash;
+};
+Number.prototype.intToHSL = function() {
+    var shortened = this % 360;
+    return "hsl(" + shortened + ",100%,75%)";
+};
+
+
+/* if two things overlap move them */
+
+/* if screen gets resized adjust positions */
+
+/* when page first loads place spans on days */
+function convertTimeToPercentage(time){
+	var timeParts = time.split(':');
+		hours = parseInt(timeParts[0]),
+		minutes = parseInt(timeParts[1]);
+	return (((hours*60)+minutes)/1440)*100;
+}
+
+assert( convertTimeToPercentage('12:30:00') == 52.083333333333336, '12:30 is 52.083333333333336% through day');
+assert( convertTimeToPercentage('12:00:00') == 50,'12:00:00 is 50% through day' );
+assert( convertTimeToPercentage('18:00:00') == 75,'18:00:00 is 75% through day' );
+assert( convertTimeToPercentage('06:00:00') == 25,'06:00 is 25% through day' );
+assert( convertTimeToPercentage('12:15:00') == 51.041666666666664,'12:15 is 51.041666666666664% through day');
+assert( convertTimeToPercentage('12:06') == 50.416666666666664,'12:06 is 50.416666666666664% through day');
+assert( convertTimeToPercentage('12:06:55') == 50.416666666666664,'12:06:55 is 50.416666666666664% through day, seconds are ignored');
+
+
+function spanLength(timeFrom,timeTo){
+	return convertTimeToPercentage(timeTo) - convertTimeToPercentage(timeFrom)
+}
+assert( spanLength('06:00:00','12:00:00') == 25, '06 to 12 is 25% of day');
+assert( spanLength('06:00:00','18:00:00') == 50, '6 am to 6pm is 50% of day');
+assert( spanLength('06:05:00','18:05:00') == 49.99999999999999, '6:05 to 18:05 is 50% of day');
+assert( spanLength('06:05:05','18:05:05') == 49.99999999999999, '06:05:05 to 18:05:05 is 49.99999999999999% of day seconds are ignored');
+
+function addSpan(event, date, timeFrom, timeTo, title, parentProjectTitle){
+	var width = spanLength(timeFrom+':00',timeTo+':00'),
+		left = convertTimeToPercentage(timeFrom),
+		colour = colourByHashCode(title);
+		$('.day').each(function(){
+			if($(this).attr('date') == date ){
+				$(this).append( '<span style="left:'+left+'%; width:'+width+'%; background-color:'+colour+'">'+title+'</span>');
+			}
+		});
+		addSpecialFeaturesToSpans();
+
+}
+ipcRenderer.on('addASpan', addSpan);
+
+function getDayFromCurrentPosition(xleft,ytop){
+	$('.day').each(function(index){
+		var position = $(this).position(),
+			height = $(this).height();
+		if(ytop >= position.top && ytop < position.top+height){
+			newDate = $(this).attr('date');
+			/* break out of each */
+			return false;
+		}
+	});
+	return newDate;
+}
+assert( getDayFromCurrentPosition(100,50) == $($('.day')[0]).attr('date'), 'getDayFromCurrentPosition(100,50) should be the same date as the first day' );
+assert( getDayFromCurrentPosition(300,200) == $($('.day')[3]).attr('date'), 'span at 300 left and 200 from top be the same date as the 4th day' );
+assert( getDayFromCurrentPosition(900,200) == $($('.day')[3]).attr('date'), 'span at 900 left and 200 from top be the same date as the 4th day' );
+
+/* allow dragging to adjust times */
+function addSpecialFeaturesToSpans(){
+$('span').draggable({
+	stop: function( event, ui ) {
+		//console.log(ui.position.left);
+		/* reset positions back to percentages after dragging */
+		$(this).css('left',ui.position.left/($('#daybook').width()/100)+"%" );
+		$('.notice').html("Update database with new times: "+JSON.stringify(convertLeftWidthToTimes(ui.position.left, ui.position.left+$(this).outerWidth()))  );
+
+		var newDate = getDayFromCurrentPosition(ui.position.left,ui.position.top),
+			newFromAndTo = convertLeftWidthToTimes(ui.position.left, ui.position.left+$(this).outerWidth());
+		console.log("Update database with new times:", newDate+' '+newFromAndTo[0],',', newDate+' '+newFromAndTo[1] );
+	},
+	snap: true,
+	containment: $("#daybook")
+});
+
+$('span').resizable({
+	stop: function( event, ui ) {
+		/* reset positions back to percentages after dragging */
+		$(this).css('width',ui.size.width/($('#daybook').width()/100)+"%" );
+		$('.notice').html("Update database with new times: "+JSON.stringify(convertLeftWidthToTimes(ui.position.left, ui.position.left+$(this).outerWidth()))  );
+		var newDate = getDayFromCurrentPosition(ui.position.left,ui.position.top),//$(this).parent().attr('date'),
+			newFromAndTo = convertLeftWidthToTimes(ui.position.left, ui.position.left+$(this).outerWidth());
+		console.log('Update database with new times:', newDate+' '+newFromAndTo[0],',',newDate+' '+newFromAndTo[1] );
+	},
+	autoHide: true,
+	handles:"e, se",
+	maxHeight: $('.day span:first').outerHeight(),
+	minHeight: $('.day span:first').outerHeight(),
+});
+}
+addSpecialFeaturesToSpans();
+
+function convertPositionToTime(x){
+	//100 ;
+	var dayWidth = $('#daybook').width();
+	var percentage = 100/(dayWidth/x)/100
+	var ofDay = 24*percentage;
+	var hours = Math.floor(ofDay);
+	//console.log(ofDay, 24*percentage-Math.floor(ofDay) );
+	//var minutes = 60*24*ofDay-hours;
+	var minutes = Math.round( 60*(24*percentage-Math.floor(ofDay)) );
+	if(minutes == 60){
+		minutes = 0;
+		hours = hours+1;
+	}
+	minutes = (minutes < 10) ? '0'+minutes : minutes;
+	hours = (hours < 10) ? '0'+hours : hours;
+	return hours+':'+minutes+':00';
+
+}
+assert( convertPositionToTime($('#daybook').width()*.25) == '06:00:00', '25% of day is 6am');
+assert( convertPositionToTime($('#daybook').width()*.75) == '18:00:00', '75% of day is 18:00');
+assert( convertPositionToTime($('#daybook').width()*.8) == '19:12:00', '80% of day is 19:12');
+
+function convertLeftWidthToTimes(left,leftPlusWidth){
+	from = convertPositionToTime(left);
+	to = convertPositionToTime(leftPlusWidth);
+	return [from,to];
+}
+//console.log( convertLeftWidthToTimes(500, 500+41.6666667) );
+//console.log(JSON.stringify(["12:00:00", "19:12:00"]) == JSON.stringify(["12:00:00", "19:12:00"]) );
+//assert( JSON.stringify(convertLeftWidthToTimes(500, 500+300)) == JSON.stringify(["12:00:00", "19:12:00"]) );
+
+
+</script>
+</body>
+</html>
