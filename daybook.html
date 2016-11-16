@@ -159,7 +159,6 @@ Number.prototype.intToHSL = function() {
 
 /* if two things overlap move them */
 
-/* if screen gets resized adjust positions */
 
 /* when page first loads place spans on days */
 function convertTimeToPercentage(time){
@@ -186,13 +185,13 @@ assert( spanLength('06:00:00','18:00:00') == 50, '6 am to 6pm is 50% of day');
 assert( spanLength('06:05:00','18:05:00') == 49.99999999999999, '6:05 to 18:05 is 50% of day');
 assert( spanLength('06:05:05','18:05:05') == 49.99999999999999, '06:05:05 to 18:05:05 is 49.99999999999999% of day seconds are ignored');
 
-function addSpan(event, date, timeFrom, timeTo, title, parentProjectTitle){
+function addSpan(event, date, timeFrom, timeTo, id, title, parentProjectTitle){
 	var width = spanLength(timeFrom+':00',timeTo+':00'),
 		left = convertTimeToPercentage(timeFrom),
 		colour = colourByHashCode(parentProjectTitle);
 		$('.day').each(function(){
 			if($(this).attr('date') == date ){
-				$(this).append( '<span style="left:'+left+'%; width:'+width+'%; background-color:'+colour+'">'+title+'</span>');
+				$(this).append( '<span style="left:'+left+'%; width:'+width+'%; background-color:'+colour+'" id="'+id+'">'+title+'</span>');
 			}
 		});
 		addSpecialFeaturesToSpans();
@@ -220,14 +219,17 @@ assert( getDayFromCurrentPosition(900,200) == $($('.day')[3]).attr('date'), 'spa
 function addSpecialFeaturesToSpans(){
 $('span').draggable({
 	stop: function( event, ui ) {
-		//console.log(ui.position.left);
 		/* reset positions back to percentages after dragging */
 		$(this).css('left',ui.position.left/($('#daybook').width()/100)+"%" );
-		$('.notice').html("Update database with new times: "+JSON.stringify(convertLeftWidthToTimes(ui.position.left, ui.position.left+$(this).outerWidth()))  );
 
 		var newDate = getDayFromCurrentPosition(ui.position.left,ui.position.top),
-			newFromAndTo = convertLeftWidthToTimes(ui.position.left, ui.position.left+$(this).outerWidth());
-		console.log("Update database with new times:", newDate+' '+newFromAndTo[0],',', newDate+' '+newFromAndTo[1] );
+			newFromAndTo = convertLeftWidthToTimes(ui.position.left, ui.position.left+$(this).outerWidth()),
+			id = $(this).attr('id'),
+			startDateTime = newDate+' '+newFromAndTo[0],
+			endDateTime = newDate+' '+newFromAndTo[1];
+
+		$('.notice').html("Update database with new times: "+newDate+" "+JSON.stringify(convertLeftWidthToTimes(ui.position.left, ui.position.left+$(this).outerWidth()))  );
+		ipcRenderer.send('updateTimesheetItem', moment().format('x'),startDateTime,endDateTime,id);
 	},
 	snap: true,
 	containment: $("#daybook")
@@ -237,10 +239,14 @@ $('span').resizable({
 	stop: function( event, ui ) {
 		/* reset positions back to percentages after dragging */
 		$(this).css('width',ui.size.width/($('#daybook').width()/100)+"%" );
-		$('.notice').html("Update database with new times: "+JSON.stringify(convertLeftWidthToTimes(ui.position.left, ui.position.left+$(this).outerWidth()))  );
 		var newDate = getDayFromCurrentPosition(ui.position.left,ui.position.top),//$(this).parent().attr('date'),
-			newFromAndTo = convertLeftWidthToTimes(ui.position.left, ui.position.left+$(this).outerWidth());
-		console.log('Update database with new times:', newDate+' '+newFromAndTo[0],',',newDate+' '+newFromAndTo[1] );
+			newFromAndTo = convertLeftWidthToTimes(ui.position.left, ui.position.left+$(this).outerWidth()),
+			id = $(this).attr('id'),
+			startDateTime = newDate+' '+newFromAndTo[0],
+			endDateTime = newDate+' '+newFromAndTo[1];
+
+		$('.notice').html("Update database with new times: "+newDate+" "+JSON.stringify(convertLeftWidthToTimes(ui.position.left, ui.position.left+$(this).outerWidth()))  );
+		ipcRenderer.send('updateTimesheetItem', moment().format('x'),startDateTime,endDateTime,id);
 	},
 	autoHide: true,
 	handles:"e, se",

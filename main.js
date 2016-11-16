@@ -687,10 +687,10 @@ ipcMain.on('getTimesForWeek', function(event, from, to){
 
 				if(err) {
 					console.log((new Error()).stack.split("\n")[1].split(':')[1]);
-					event.sender.send('addASpan', row.startDateTime.substr(0,10), row.startDateTime.substr(11,5), row.endDateTime.substr(11,5), row.title, 'No ancestor title found' );
+					event.sender.send('addASpan', row.startDateTime.substr(0,10), row.startDateTime.substr(11,5), row.endDateTime.substr(11,5), row.id, row.title, 'No ancestor title found' );
 
 				}else{
-					event.sender.send('addASpan', row.startDateTime.substr(0,10), row.startDateTime.substr(11,5), row.endDateTime.substr(11,5), row.title, ultimateAncestor.title );
+					event.sender.send('addASpan', row.startDateTime.substr(0,10), row.startDateTime.substr(11,5), row.endDateTime.substr(11,5), row.id, row.title, ultimateAncestor.title );
 				}
 
 			});
