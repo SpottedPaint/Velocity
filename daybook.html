@@ -71,31 +71,31 @@
 		<span>22</span>
 		<span>23</span>
 	</div>
-	<div class="day" date="2016-10-03">
+	<div class="day" date="2016-10-10">
 		<h2>Mandag</h2>
 
 	</div>
-	<div class="day" date="2016-10-04">
+	<div class="day" date="2016-10-11">
 		<h2>Tirsdag</h2>
 
 	</div>
-	<div class="day" date="2016-10-05">
+	<div class="day" date="2016-10-12">
 		<h2>Onsdag</h2>
 
 	</div>
-	<div class="day" date="2016-10-06">
+	<div class="day" date="2016-10-13">
 		<h2>Torsdag</h2>
 
 	</div>
-	<div class="day" date="2016-10-07">
+	<div class="day" date="2016-10-14">
 		<h2>Fredag</h2>
 
 	</div>
-	<div class="day" date="2016-10-08">
+	<div class="day" date="2016-10-15">
 		<h2>Lørdag</h2>
 
 	</div>
-	<div class="day" date="2016-10-09">
+	<div class="day" date="2016-10-16">
 		<h2>Søndag</h2>
 
 	</div>
@@ -118,8 +118,14 @@
 
 const {ipcRenderer} = require('electron');
 
-var fromDate = '2016-10-03',
-	toDate = moment('2016-10-03').add(7, 'days').format('YYYY-MM-DD');
+var fromDate = moment().startOf('isoWeek').format('YYYY-MM-DD'),
+	toDate = moment().startOf('isoWeek').add(7, 'days').format('YYYY-MM-DD');
+
+$('.day').each(function(index){
+	$(this).attr('date', moment().startOf('isoWeek').add(index, 'days').format('YYYY-MM-DD') );
+	//alert( $(this).attr('date') );
+});
+
 ipcRenderer.send('getTimesForWeek', fromDate, toDate);
 
 /* lets do assertions for testing */
