@@ -209,13 +209,13 @@ assert( spanLength('06:00:00','18:00:00') == 50, '6 am to 6pm is 50% of day');
 assert( spanLength('06:05:00','18:05:00') == 49.99999999999999, '6:05 to 18:05 is 50% of day');
 assert( spanLength('06:05:05','18:05:05') == 49.99999999999999, '06:05:05 to 18:05:05 is 49.99999999999999% of day seconds are ignored');
 
-function addSpan(event, date, timeFrom, timeTo, id, title, parentProjectTitle){
+function addSpan(event, date, timeFrom, timeTo, id, title, parentProjectTitle, projectId){
 	var width = spanLength(timeFrom+':00',timeTo+':00'),
 		left = convertTimeToPercentage(timeFrom),
 		colour = colourByHashCode(parentProjectTitle);
 		$('.day').each(function(){
 			if($(this).attr('date') == date ){
-				$(this).append( '<span style="left:'+left+'%; width:'+width+'%; background-color:'+colour+'" id="'+id+'">'+title+'</span>');
+				$(this).append( '<span style="left:'+left+'%; width:'+width+'%; background-color:'+colour+'" id="'+id+'" projectId="'+projectId+'"">'+title+'</span>');
 			}
 		});
 		addSpecialFeaturesToSpans();
@@ -241,6 +241,14 @@ assert( getDayFromCurrentPosition(900,200) == $($('.day')[3]).attr('date'), 'spa
 
 /* allow dragging to adjust times */
 function addSpecialFeaturesToSpans(){
+
+$('span').dblclick(function(e){
+	var projectId = $(this).attr('projectId'),
+		projectTitle = $(this).text();
+
+	window.location.href = 'index.html?projectId='+projectId+'&projectTitle='+projectTitle+'&from='+fromDate+'&to='+toDate+'';
+});
+
 $('span').draggable({
 	stop: function( event, ui ) {
 		/* reset positions back to percentages after dragging */
