@@ -351,6 +351,31 @@ ipcMain.on('getTotalTimeOnProjectBetween',function(event, id, projectId, from, t
 	);
 });
 
+ipcMain.on('getTotalTimeBetween',function(event, from, to){
+
+	var from = from+' 00:00:00',
+		to = to+' 23:59:59';
+	db.get(" \
+\
+	SELECT round(SUM(timeSpan) / 3600,6) as sum FROM \
+	( \
+		SELECT id, CAST(strftime('%s', endDateTime) - strftime('%s', startDateTime) AS REAL) as timeSpan, 1 as priority \
+		FROM timesheet \
+		WHERE deleted != 1 \
+		AND strftime(startDateTime) BETWEEN strftime('"+from+"') AND strftime('"+to+"') \
+	)",
+		function(err, row) {
+			if(err) {
+				console.log((new Error()).stack.split("\n")[1].split(':')[1], "getTotalTimeBetween",  err, "{", from, ",", to , "}" );
+			}else{
+				if(row.sum == null ){
+					row.sum = 0;
+				}
+				event.sender.send('totalTimeBetween', row.sum);
+			}
+		}
+	);
+});
 
 /*
 
@@ -799,6 +824,3 @@ ipcMain.on('importFrom', function(event, importParentId, fileName, importType){
 	}
 //
 });
-
-
-
