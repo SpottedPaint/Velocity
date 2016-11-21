@@ -104,7 +104,7 @@
 
 
 	<div class="actions">
-		<a class="export" href="index.html">Home</a>
+		<a class="previous" href="">← Previous</a><a class="currentWeek" href="">Current Week</a><a class="next" href="">Next →</a> <a  href="index.html">Home</a>
 	</div>
 <!-- <script src="jquery-3.1.1.min.js"></script>
 <script src="jquery-ui.min.js"></script> -->
@@ -118,13 +118,37 @@
 
 const {ipcRenderer} = require('electron');
 
-var fromDate = moment().startOf('isoWeek').format('YYYY-MM-DD'),
-	toDate = moment().startOf('isoWeek').add(7, 'days').format('YYYY-MM-DD');
 
+/* get GET parameters from url */
+if((window.location.search.split('?')).length > 1){
+	getParts = window.location.search.split('?')[1].split('&');
+}else{
+	getParts = [];
+}
+GET = {}
+
+for (pair in getParts){
+	parts = getParts[pair].split('=');
+	GET[parts[0]] = parts[1];
+}
+
+/* set up current week */
+var targetDate = ( typeof GET['date'] !== 'undefined'  ) ? GET['date'] : moment().startOf('isoWeek').format('YYYY-MM-DD'),
+	fromDate = moment(targetDate).startOf('isoWeek').format('YYYY-MM-DD'),
+	toDate = moment(targetDate).startOf('isoWeek').add(7, 'days').format('YYYY-MM-DD'),
+	previousWeek = moment(targetDate).startOf('isoWeek').subtract(7, 'days').format('YYYY-MM-DD')
+
+$('.previous').attr("href","?date="+previousWeek);
+$('.next').attr("href","?date="+toDate);
+$('.currentWeek').attr("href","?date="+moment().startOf('isoWeek').format('YYYY-MM-DD'));
+$('.day:first h2').html(fromDate);
+$('.day:last h2').html(toDate);
+
+/* set date for each day in week */
 $('.day').each(function(index){
-	$(this).attr('date', moment().startOf('isoWeek').add(index, 'days').format('YYYY-MM-DD') );
-	//alert( $(this).attr('date') );
+	$(this).attr('date', moment(fromDate).startOf('isoWeek').add(index, 'days').format('YYYY-MM-DD') );
 });
+
 
 ipcRenderer.send('getTimesForWeek', fromDate, toDate);
 
