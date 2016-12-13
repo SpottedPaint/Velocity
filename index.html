@@ -428,7 +428,14 @@
 			}
 		});
 
-
+		function scrollToProject(projectId){
+			var destination = ($('#'+projectId+'').offset().top)-($(window).height()/2);
+			$(".chooser").animate(
+				{ scrollTop: destination},
+				750,
+				function(){ }
+			);
+		}
 
 		format = function(format) {
 			var args = Array.prototype.slice.call(arguments, 1);
