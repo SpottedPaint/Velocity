@@ -190,9 +190,8 @@
 
 		function checkEachDayHasAValue(){
 			/* and if it doesn't try and get it again ? */
-			console.log('checking for empty values');
+			/* checking for empty values */
 			if(checkEachCellHasAValue() == false){
-
 				window.setTimeout(function(){
 					checkEachDayHasAValue();
 				}, 300);
