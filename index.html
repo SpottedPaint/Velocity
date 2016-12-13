@@ -450,21 +450,34 @@
 		}
 
 		if (GET['projectId'] && GET['projectTitle']){
-			ipcRenderer.send('getProjectsBetween', 0, GET['projectId']);
-		}
-		/* get the projects that are children of root */
 
-		ipcRenderer.send('getProjects', 0);
+			ipcRenderer.send('getProjectsBetween', 0, GET['projectId']);
+
+		}else{
+			/* get the projects that are children of root */
+			ipcRenderer.send('getProjects', 0);
+		}
+
 		ipcRenderer.on('projectsList', renderProjects);
 
 		ipcRenderer.on('projectsListLong', renderProjectsLong);
 
 		function renderProjectsLong(event, parentId, projects){
 			projects.forEach(function(project){
-				renderProjects(null, project.parentId, [project])
+				// renderProjects(null, project.parentId, [project])
+				ipcRenderer.send('getProjects', project.parentId);
 			});
+
+			setTimeout(function(){ scrollToProject(GET['projectId']) }, 300);
+
+			/* get root child projects */
+			//ipcRenderer.send('getProjects', projects[0]['id']);
+
 			/* get children of last project */
-			ipcRenderer.send('getProjects', projects[projects.length-1]['id']);
+			//ipcRenderer.send('getProjects', projects[projects.length-1]['id']);
+
+			/* get siblings of last project */
+			//ipcRenderer.send('getProjects', projects[projects.length-2]['id']);
 
 		}
 
