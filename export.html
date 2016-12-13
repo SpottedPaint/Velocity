@@ -155,7 +155,10 @@
 		}
 
 		function getFileName(projectTitle,from,to){
-			return decodeURIComponent(projectTitle).replace(/"/g,'').replace(/,/g, '')+'-'+from.format('YYYY-MM-DD')+'-'+to.format('YYYY-MM-DD')+".csv";
+			/* escape project titles to make filename */
+			/* replacing '* @ - _ + . / " , and spaces' with - and replacing repeated - */
+			var escapedFileName = decodeURIComponent(projectTitle).replace(/[*@_+.\,/" ]/g, '-').replace(/[-]+/g, '-');
+			return escapedFileName+'-'+from.format('YYYY-MM-DD')+'-'+to.format('YYYY-MM-DD')+".csv";
 		}
 
 		function timeSpentOnProjectOnThisDay(id,time){
