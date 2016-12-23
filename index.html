@@ -582,11 +582,15 @@
 					} else if(parentLeft+parentWidth < childLeft){
 
 						console.log('parentLeft+parentWidth < childLeft');
-						console.log(parentElementId);
-						//console.log('updateProject', childId.replace('child',''), parseInt(moment().format('x')), $('#'+childId+' span ').html(), parentElementId.replace('child','') );
 						ipcRenderer.send('updateProject', childId.replace('child',''), parseInt(moment().format('x')), $('#'+childId+' span ').html(), parentElementId.replace('child','') );
-						$('#'+childId+' ').remove();
-						ipcRenderer.send('getProjects', parentElementId.replace('child','') );
+
+						/* remove child */
+						//$('#'+childId+'').remove();
+						//ipcRenderer.send('getProjects', parentElementId.replace('child','') );
+
+						/* expand new parent */
+						$('#'+parentElementId.replace('child','')+' > ul').remove();
+						//ipcRenderer.send('getProjects', parentElementId.replace('child','') );
 
 					} else if(parentLeft+parentWidth > childLeft ){
 
@@ -612,7 +616,15 @@
 						//setTimeout(function(){ ipcRenderer.send('getProjects', parentElementId.replace('child',''))  }, 500);
 						//ipcRenderer.send('getProjects', parentElementId.replace('child','') );
 
-						setTimeout(function(){getCurrentExpansionState(); }, 300);
+						//setTimeout(function(){getCurrentExpansionState(); }, 300);
+
+						/* remove child */
+						$('#'+childId+'').remove();
+
+						/* expand new parent */
+						$('#'+parentElementId.replace('child','')+' > ul').remove();
+						ipcRenderer.send('getProjects', parentElementId.replace('child','') );
+
 					}
 
 
