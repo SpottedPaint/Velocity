@@ -558,7 +558,9 @@
 						var newParentProjectId = ui.item.context.parentNode.id;
 					}
 
-					var	parentLeft = parentElement.position().left,
+
+					var	parentPosition = parentElement.position(),
+					parentLeft = (parentPosition !== undefined ) ? parentPosition.left : 0,
 						parentWidth = parentElement.width(),
 						childLeft = ui.position.left,
 						childId = ui.item.context.id;
