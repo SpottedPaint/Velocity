@@ -341,6 +341,7 @@
 			ipcRenderer.send('deleteTimesheetItem',id);
 			$('li#row'+id).remove();
 		}
+
 		function editTimesheetItem(element){
 			var element = $(element),
 				id = element.attr('row'),
@@ -398,14 +399,12 @@
 			}
 		}
 
-
 		ipcRenderer.on('newTimesheetTotal', newTimesheetTotal);
 		function newTimesheetTotal(event, projectId,sum){
 			$('.total .timeSpan').html(projectId);
 			/* force redraw */
 			$('.total').hide().show(0);
 		}
-
 
 		function addAllTimeSheetRowsToTable(projectId){
 			$("ul.table li[class!=total]").remove();
