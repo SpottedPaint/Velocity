@@ -152,6 +152,13 @@
 
 		});
 
+		$('#to,#from').on('blur', function(e){
+			var newFrom = $('#from').val(),
+				newTo = $('#to').val();
+			updateExportFromAndTo(newFrom,newTo);
+			addAllTimeSheetRowsToTable($('.record').attr('projectId') );
+		});
+
 		function updateExportFromAndTo(from,to){
 			var newExportHref = $('.export').attr('href');
 			$('.export').attr('href', newExportHref.replace(/from=[0-9-]+/,'from='+from).replace(/to=[0-9-]+/,'to='+to) );
