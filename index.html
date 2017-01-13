@@ -541,7 +541,7 @@
 				revert: 300,
 				delay: 150,
 				connectWith: '.chooser ul',
-				update: function(event, ui) {
+				stop: function(event, ui) {
 
 					if(ui.item.context.previousElementSibling == undefined){
 						if(!ui.item.context.parentNode){
@@ -584,7 +584,8 @@
 							ipcRenderer.send('updateProject', childId.replace('child',''), parseInt(moment().format('x')), projectTitle,  newParentProjectId.replace('child',''));
 						}
 
-						setTimeout(function(){getCurrentExpansionState(); }, 300);
+						//setTimeout(function(){getCurrentExpansionState(); }, 300);
+						return true;
 
 					} else if(parentLeft+parentWidth < childLeft){
 
@@ -598,11 +599,12 @@
 						/* expand new parent */
 						$('#'+parentElementId.replace('child','')+' > ul').remove();
 						//ipcRenderer.send('getProjects', parentElementId.replace('child','') );
+						return true;
 
 					} else if(parentLeft+parentWidth > childLeft ){
 
 						console.log('parentLeft+parentWidth > childLeft');
-						projectTitle = $('#'+childId+' span ').html()
+						projectTitle = $('#'+childId+' span ').html();
 						if (projectTitle == undefined){
 							projectTitle = $(ui.item[0]).children('span').html();
 						}
@@ -632,6 +634,7 @@
 						$('#'+parentElementId.replace('child','')+' > ul').remove();
 						ipcRenderer.send('getProjects', parentElementId.replace('child','') );
 
+						return true;
 					}
 
 
