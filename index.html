@@ -73,7 +73,7 @@
 				<span class="dateTime"></span>
 				<span class="dateTime"></span>
 				<span class="timeSpan">00:00</span>
-				<a class="action add">Add</a>
+				<a class="action add">add</a>
 			</li>
 		<ul>
 
@@ -174,12 +174,16 @@
 			return height;
 		}
 
-		$('.chooser').height(targetHeight('.chooser',[]));
-		$('.panel').height(targetHeight('.panel',['.recording','.actions']));
+		//$('.chooser').height(targetHeight('.chooser',[]));
+		//$('.panel').height(targetHeight('.panel',['.recording','.actions']));
 
 		$(window).on('resize',function(){
 			$('.chooser').height(targetHeight('.chooser',[]));
+			$('.panel ul.table').height(targetHeight('.panel',['.actions', '.recording', '.filter'] )-16);
+
 		});
+
+		$(window).trigger('resize');
 
 		function addNewProjectLinkEvents(){
 			$('.chooser li .add').one('click', function(){ });
@@ -411,6 +415,9 @@
 			$('.total .timeSpan').html(projectId);
 			/* force redraw */
 			$('.total').hide().show(0);
+
+			/* scroll to bottom of timesheet items */
+			$('.panel ul.table').scrollTop($('.panel ul.table')[0].scrollHeight);
 		}
 
 		function addAllTimeSheetRowsToTable(projectId){

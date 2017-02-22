@@ -9,14 +9,14 @@ body, html{ padding:0; margin:0; font-family: arial,sans-serif;}
 #export .data{ padding:1em;}
 
 
-a{ color:orange;}
+a{ color:orange; text-decoration:none; }
 a:hover{ color:red;}
 .recording header a,.recording header h2,.recording header span { float:left; }
 .recording header a{ padding:1em; outline: 1em; background-color: #003366; border-radius:2em; margin-right:1em; }
 .recording header span{ float:right; padding:.5em; outline: 1em; border-radius:2em; font-size:1.5em; }
 .recording header h2{ margin:0; padding-top:.5em; font-size:1.5em; margin-right:3em;}
 
-.panel ul.table{ padding-left:0;}
+.panel ul.table{ padding-left:0; height:300px; overflow:auto; border-top:1px solid #ddd;}
 .panel .table li{ clear:both; list-style-type:none; border-bottom:1px solid #ddd; }
 .panel .dateTime,
 .panel .timeSpan,
@@ -33,7 +33,7 @@ a:hover{ color:red;}
 .panel .timeSpan{ min-width:40px; /*width:20%;*/}
 .panel .action{ min-width:30px; /*width:10%;*/}
 .panel .total{ border-top:1px solid #ccc;}
-
+.panel .total .timeSpan{ font-weight:bolder; min-width:62px;}
 .filter{
 	padding:0em 0 .5em 0;
 	clear:both;
