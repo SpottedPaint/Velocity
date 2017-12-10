@@ -694,6 +694,25 @@ ipcMain.on('getTimesForWeek', function(event, from, to){
 			console.log((new Error()).stack.split("\n")[1].split(':')[1], "getTimesForWeek",  err, "{", row.title, ",", startDateTime, ",", endDateTime, ",", projectId, "}" );
 		}else{
 
+			// if parent = 0 then query below won't return anything so give them a span
+			if( row.parentId == '0'){
+				event.sender.send('addASpan', row.startDateTime.substr(0,10), row.startDateTime.substr(11,5), row.endDateTime.substr(11,5), row.id, row.title, row.title, row.projectId );
+			}
+
+			// if parent has parent of 0
+			db.each("SELECT project.title, project.parentId \
+				FROM project \
+				WHERE project.id = "+row.parentId+" \
+				AND project.parentId = 0",
+			function(err, result){
+				if(err) {
+					// event.sender.send('addASpan', row.startDateTime.substr(0,10), row.startDateTime.substr(11,5), row.endDateTime.substr(11,5), row.id, row.title, row.title, row.projectId );
+					console.log(result);
+				}else{
+					event.sender.send('addASpan', row.startDateTime.substr(0,10), row.startDateTime.substr(11,5), row.endDateTime.substr(11,5), row.id, result.title, result.title, row.projectId );
+				}
+			});
+
 		db.each("\
 			WITH RECURSIVE \
 			related(n) AS ( \
